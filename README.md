@@ -1,5 +1,7 @@
 # ransomware_protect_linker
-A Proof-of-Concept for avoid ransomware impact by camouflage & hiding files.
+A Proof-of-Concept for avoid ransomware impact by camouflage & hide files.
+
+The main idea is that the most of ransomwares don't encrypt the system files. (.exe, .dll ...)
 
 To access the hidden file, we utilize the link file (a.k.a. shortcuts) in Windows to solve the usablity issue.
 
