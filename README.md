@@ -3,7 +3,7 @@ A Proof-of-Concept for avoid ransomware impact by camouflage & hiding files.
 
 To access the hidden file, we utilize the link file (a.k.a. shortcuts) in Windows to solve the usablity issue.
 
-This is the latest version for the deployment. (Applying Encrypted & camoyflaged DB / Adanced model / Right-Click Function ...)  
+This is the latest version for the deployment. (Applying Encrypted & camouflaged DB / Adanced model / Right-Click Function ...)  
 If you want to see the test code, check the ```src```. (non-encrypted DB / not-advanced model )  
 
 ## usage
