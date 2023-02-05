@@ -9,14 +9,21 @@ import getpass
 import argparse
 import hashlib
 
-DIR_PATH = f"{os.environ['USERPROFILE']}\\Desktop\\linking"
+# GET DEFAULT PATH
+if getattr(sys, 'frozen', False):
+    file_path = sys.executable
+    file_name = file_path.split("\\")[-1]
+    DIR_PATH = file_path.split(f"\\dist\\{file_name}")[0]
+else:
+    file_path = os.path.abspath(__file__)
+    file_name = file_path.split("\\")[-1]
+    DIR_PATH = file_path.split(f"\\{file_name}")[0]
 
 with open(f"{DIR_PATH}\\app_path.json", "r") as f:
     app_path_dict = json.load(f)
 
 with open(f"{DIR_PATH}\\mapping.db", "r") as f:
     data = f.read()
-    # 복호화 프로세스
 
 data = json.loads(data.replace("'",'"'))    
 hidden_ext_list = data['hidden_ext']
@@ -46,9 +53,9 @@ def preprocessing():
     print(f"[*] Supported Extension: {target_ext_list}")
 
 def postprocessing():
+    data['mapping_table'] = mapping_dict
+    data['rainbow_table'] = rainbow_table
     with open(f"{DIR_PATH}\\mapping.db", "w") as f:
-        data['mapping_table'] = mapping_dict
-        data['rainbow_table'] = rainbow_table
         json.dump(data, f)
 
 def ext2app(ext):
@@ -85,8 +92,12 @@ def make_shortcuts(file):
         os.rename(file, hidden_file)
         shell = win32com.client.Dispatch("WScript.Shell")
         shortcut = shell.CreateShortcut(shortcut_path)
-        # shortcut.Targetpath = 'python'
-        # shortcut.Arguments = f'"{DIR_PATH}\\adv_linker.py" --name {h_name}'
+        # Open with Python (FOR TEST)
+        '''
+        shortcut.Targetpath = 'python'
+        shortcut.Arguments = f'"{DIR_PATH}\\adv_linker.py" --name {h_name}'
+        '''
+        # Open with execute file (FOR DIST)
         shortcut.Targetpath = f'{DIR_PATH}\\dist\\adv_linker.exe'
         shortcut.Arguments = f'--name {h_name}'
         shortcut.IconLocation = ext_icon_dict[ext]
@@ -140,12 +151,11 @@ if __name__ == '__main__':
     
     target_list = []
     if args.hide:
+        # start_time = time.time()
         target_path = f"{DIR_PATH}\\testbed"
         file_list = os.listdir(target_path)
-        start_time = time.time()
         for file in file_list:
             make_shortcuts(f"{target_path}\\{file}")
-        print("time :", time.time() - start_time)
         postprocessing()
         sychronize(target_list)
         # print("time :", time.time() - start_time)
@@ -156,14 +166,14 @@ if __name__ == '__main__':
         sychronize(target_list)
 
     elif args.recover:
+        # start_time = time.time()
         if not auth():
             print("[-] PASSWORD failed :(")
             sys.exit()
-        start_time = time.time()
         for hidden_file in list(mapping_dict):
             recovery(hidden_file)
-        print("time :", time.time() - start_time)
         postprocessing()
+        # print("time :", time.time() - start_time)
 
     elif args.recoverfile:
         if not auth():

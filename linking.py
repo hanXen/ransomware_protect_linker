@@ -8,14 +8,21 @@ import time
 import getpass
 import argparse
 
-DIR_PATH = f"{os.environ['USERPROFILE']}\\Desktop\\linking"
+# GET DEFAULT PATH
+if getattr(sys, 'frozen', False):
+    file_path = sys.executable
+    file_name = file_path.split("\\")[-1]
+    DIR_PATH = file_path.split(f"\\dist\\{file_name}")[0]
+else:
+    file_path = os.path.abspath(__file__)
+    file_name = file_path.split("\\")[-1]
+    DIR_PATH = file_path.split(f"\\{file_name}")[0]
 
 with open(f"{DIR_PATH}\\app_path.json", "r") as f:
     app_path_dict = json.load(f)
 
 with open(f"{DIR_PATH}\\mapping.db", "r") as f:
     data = f.read()
-    # 복호화 프로세스
 
 data = json.loads(data.replace("'",'"'))    
 hidden_ext_list = data['hidden_ext']

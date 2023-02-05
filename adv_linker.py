@@ -4,14 +4,21 @@ import json
 import argparse
 import subprocess
 
-USERPROFILE = os.environ['USERPROFILE']
+# GET DEFAULT PATH
+if getattr(sys, 'frozen', False):
+    file_path = sys.executable
+    file_name = file_path.split("\\")[-1]
+    DIR_PATH = file_path.split(f"\\dist\\{file_name}")[0]
+else:
+    file_path = os.path.abspath(__file__)
+    file_name = file_path.split("\\")[-1]
+    DIR_PATH = file_path.split(f"\\{file_name}")[0]
 
-with open(f"{USERPROFILE}\\Desktop\\linking\\app_path.json", "r") as f:
+with open(f"{DIR_PATH}\\app_path.json", "r") as f:
     app_path_dict = json.load(f)
 
-with open(f"{USERPROFILE}\\Desktop\\linking\\mapping.db", "r") as f:
+with open(f"{DIR_PATH}\\mapping.db", "r") as f:
     data = f.read()
-    # 복호화 프로세스
 
 data = json.loads(data.replace("'",'"'))    
 mapping_dict = data['mapping_table']
@@ -43,14 +50,11 @@ if __name__ == '__main__':
     app = ext2app(ext)
 
     if ext in app_path_dict['photo']['ext']:
-        # cmd = 'C:\\Windows\\system32\\rundll32.exe "C:\\Program Files\\Windows Photo Viewer\\PhotoViewer.dll", ImageView_Fullscreen '
         cmd = f'{app} {app_path_dict["photo"]["arg"]} {hidden_name}'
     else:
         cmd = [f'{app}', f'{hidden_name}']
 
     subprocess.Popen(cmd)
-    # print(cmd)
-    # os.system(cmd)
     
 
 
