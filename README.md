@@ -8,6 +8,12 @@ If you want to see the test code, check the ```src```. &nbsp;(non-encrypted DB /
 
 ## usage
 
+### requirements
+```bash
+> pip install pycryptodome
+> pip install pywin32
+```
+
 ### build
 ```bash
 > pyinstaller -u -F enc_adv_linker.py
