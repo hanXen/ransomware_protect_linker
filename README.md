@@ -23,9 +23,9 @@ If you want to see the test code, check the ```src```. &nbsp;(non-encrypted DB /
 ```
 ### run
 ```bash
-# Hide All Files (testbed Directory)
+# Hide All Files (testbed Directory) (Run as Administrator)
 > hiding.exe -hide
-# Hide File (or you can just rigt-click the file)
+# Hide File (or you can just rigt-click the file) (Run as Administrator)
 > hiding.exe --hidefile [filename]
 # Recover All Files (testbed Directory)
 > recovery.exe --recover
