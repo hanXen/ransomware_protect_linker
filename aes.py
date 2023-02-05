@@ -5,6 +5,7 @@ from Crypto import Random
 
 class AESCipher:
     def __init__(self):
+        # set your own key
         self.key = 'A'*32
         self.BS = 32
         self.pad = lambda s: s + (self.BS - len(s) %

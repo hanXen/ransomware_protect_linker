@@ -14,10 +14,10 @@ else:
     file_name = file_path.split("\\")[-1]
     DIR_PATH = file_path.split(f"\\{file_name}")[0]
 
-with open(f"{DIR_PATH}\\app_path.json", "r") as f:
+with open(f"{DIR_PATH}\\db\\app_path.json", "r") as f:
     app_path_dict = json.load(f)
 
-with open(f"{DIR_PATH}\\mapping.db", "r") as f:
+with open(f"{DIR_PATH}\\db\\mapping.db", "r") as f:
     data = f.read()
 
 data = json.loads(data.replace("'",'"'))    
