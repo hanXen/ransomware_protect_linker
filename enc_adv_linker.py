@@ -14,14 +14,14 @@ if getattr(sys, 'frozen', False):
 else:
     file_path = os.path.abspath(__file__)
     file_name = file_path.split("\\")[-1]
-    DIR_PATH = file_path.split(f"\\{file_name}")[0]
+    DIR_PATH = file_path.split(f"\\src\\{file_name}")[0]
 
 aes = AESCipher()
 
-with open(f"{DIR_PATH}\\db\\app_path.json", "r") as f:
+with open(f"{DIR_PATH}\\db\\app_path.dll", "r") as f:
     app_path_dict = json.load(f)
 
-with open(f"{DIR_PATH}\\db\\enc_mapping.db", "r") as f:
+with open(f"{DIR_PATH}\\db\\enc_mapping.dll", "r") as f:
     data = f.read()
 
 data = aes.decrypt(data)    

@@ -1,0 +1,94 @@
+import os
+import sys
+import json
+import getpass
+import argparse
+import hashlib
+from aes import AESCipher
+
+
+# GET DEFAULT PATH
+if getattr(sys, 'frozen', False):
+    file_path = sys.executable
+    file_name = file_path.split("\\")[-1]
+    DIR_PATH = file_path.split(f"\\dist\\{file_name}")[0]
+else:
+    file_path = os.path.abspath(__file__)
+    file_name = file_path.split("\\")[-1]
+    DIR_PATH = file_path.split(f"\\{file_name}")[0]
+
+aes = AESCipher()
+
+with open(f"{DIR_PATH}\\db\\enc_mapping.dll", "r") as f:
+    data = f.read()
+
+data = aes.decrypt(data)    
+data = json.loads(data.replace("'",'"'))    
+mapping_dict = data['mapping_table']
+RECOVERY_PASS = data['recovery_pass']
+rainbow_table = data['rainbow_table']
+
+target_ext_list = []
+ext_icon_dict = {}
+
+def postprocessing():
+    global data
+    data['mapping_table'] = mapping_dict
+    data['rainbow_table'] = rainbow_table
+    data = aes.encrypt(json.dumps(data))
+    with open(f"{DIR_PATH}\\db\\enc_mapping.dll", "w") as f:
+        f.write(data)
+
+def hash_name(name):
+    sha = hashlib.new('sha1')
+    sha.update(name.encode())
+    
+    return sha.hexdigest()
+
+def recovery(hidden_file):
+    cmd = ""
+    try:
+        file = mapping_dict[hidden_file]
+        os.rename(hidden_file, file)
+        if os.path.exists(f'{file}.lnk'):
+            os.remove(f'{file}.lnk')
+        del mapping_dict[hidden_file]
+        del rainbow_table[hash_name(hidden_file)]
+        # print(f"[+] {hidden_file} => {file}")
+    except:
+        print(f"[-] {hidden_file} recovery fali :(")
+
+def auth():
+    pass_in = getpass.getpass("PASSWORD? : ")
+    if pass_in == RECOVERY_PASS:
+        return True
+    return False
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--recover', required=False, action='store_true')
+    parser.add_argument('--recoverfile', required=False, type=str, help='File Path')
+    args = parser.parse_args()
+
+    if len(sys.argv) != 2 and len(sys.argv) != 3:
+        print("Usage: ./linking.py [option] ([arg])")
+        sys.exit()
+
+    print("[*] File Recovery : lnk File => original File")
+
+    if args.recover:
+        if not auth():
+            print("[-] PASSWORD failed :(")
+            sys.exit()
+        for hidden_file in list(mapping_dict):
+            recovery(hidden_file)
+
+    elif args.recoverfile:
+        if not auth():
+            print("[-] PASSWORD failed :(")
+            sys.exit()
+        hidden_file = rainbow_table[args.recoverfile]
+        recovery(hidden_file)
+        
+    postprocessing()
