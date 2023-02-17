@@ -9,7 +9,7 @@ This is the latest version for the deployment.
 (Applying Encrypted & camouflaged DB / Adanced model / Right-Click Function ...)    
 If you want to see the test code, check the ```src```. &nbsp;(default key based encrypted / non-encrypted DB , non-advanced model )  
 
-[+] UPDATE: We apply password based encrypt, so that every function require password. (hide / recover / access file)
+[+] UPDATE: Applied password based encrypt, every function require password. (hide / recover / access file)
 
 ## usage
 
