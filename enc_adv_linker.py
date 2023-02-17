@@ -32,6 +32,8 @@ while True:
             break
     except:
         print("[-] PASSWORD Fail :(")
+        input("Press Enter ...")
+        sys.exit(1)
     
 data = json.loads(data.replace("'",'"'))    
 mapping_dict = data['mapping_table']
@@ -69,7 +71,3 @@ if __name__ == '__main__':
 
     subprocess.Popen(cmd)
     
-    
-
-
-

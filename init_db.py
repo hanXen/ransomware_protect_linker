@@ -36,4 +36,4 @@ with open(f"{DIR_PATH}\\db\\app_path.dll", "w") as f:
 # os.remove(f"{DIR_PATH}\\db\\mapping.db")
 # os.remove(f"{DIR_PATH}\\db\\app_path.json")
         
-    
+        
