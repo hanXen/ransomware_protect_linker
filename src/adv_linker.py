@@ -55,6 +55,7 @@ if __name__ == '__main__':
         cmd = [f'{app}', f'{hidden_name}']
 
     subprocess.Popen(cmd)
+
     
 
 
