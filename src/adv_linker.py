@@ -22,7 +22,7 @@ with open(f"{DIR_PATH}\\db\\mapping.db", "r") as f:
 
 data = json.loads(data.replace("'",'"'))    
 mapping_dict = data['mapping_table']
-rainbow_table = data['rainbow_table']
+hash_table = data['hash_table']
 
 def ext2app(ext):
     for app in app_path_dict.keys():
@@ -45,7 +45,7 @@ if __name__ == '__main__':
         sys.exit()
 
     h_name = args.name
-    hidden_name = rainbow_table[h_name]
+    hidden_name = hash_table[h_name]
     ext = mapping_dict[hidden_name].split('.')[-1]
     app = ext2app(ext)
 

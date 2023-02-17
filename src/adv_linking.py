@@ -29,7 +29,7 @@ hidden_ext_list = data['hidden_ext']
 hidden_dir_dict = data['hidden_dir']
 mapping_dict = data['mapping_table']
 RECOVERY_PASS = data['recovery_pass']
-rainbow_table = data['rainbow_table']
+hash_table = data['hash_table']
 
 target_ext_list = []
 ext_icon_dict = {}
@@ -53,7 +53,7 @@ def preprocessing():
 
 def postprocessing():
     data['mapping_table'] = mapping_dict
-    data['rainbow_table'] = rainbow_table
+    data['hash_table'] = hash_table
     with open(f"{DIR_PATH}\\db\\mapping.db", "w") as f:
         json.dump(data, f)
 
@@ -102,7 +102,7 @@ def make_shortcuts(file):
         shortcut.IconLocation = ext_icon_dict[ext]
         shortcut.Save()
         mapping_dict[hidden_file] = file
-        rainbow_table[h_name] = hidden_file
+        hash_table[h_name] = hidden_file
         target_list.append(hidden_file)
         # print(f"[+] {file} => {hidden_file}")
     except:
@@ -117,7 +117,7 @@ def recovery(hidden_file):
         if os.path.exists(f'{file}.lnk'):
             os.remove(f'{file}.lnk')
         del mapping_dict[hidden_file]
-        del rainbow_table[hash_name(hidden_file)]
+        del hash_table[hash_name(hidden_file)]
         # print(f"[+] {hidden_file} => {file}")
     except:
         print(f"[-] {hidden_file} recovery fali :(")
@@ -174,7 +174,7 @@ if __name__ == '__main__':
         if not auth():
             print("[-] PASSWORD failed :(")
             sys.exit()
-        hidden_file = rainbow_table[args.recoverfile]
+        hidden_file = hash_table[args.recoverfile]
         recovery(hidden_file)
         postprocessing()
 
