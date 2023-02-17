@@ -18,10 +18,10 @@ else:
 
 aes = AESCipher()
 
-with open(f"{DIR_PATH}\\db\\app_path.json", "r") as f:
+with open(f"{DIR_PATH}\\src\\app_path.json", "r") as f:
     app_path_dict = json.load(f)
 
-with open(f"{DIR_PATH}\\db\\enc_mapping.db", "r") as f:
+with open(f"{DIR_PATH}\\src\\enc_mapping.db", "r") as f:
     data = f.read()
 
 data = aes.decrypt(data)    

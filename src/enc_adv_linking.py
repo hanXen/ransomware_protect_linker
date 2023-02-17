@@ -24,10 +24,10 @@ print(DIR_PATH)
 
 aes = AESCipher()
 
-with open(f"{DIR_PATH}\\db\\app_path.json", "r") as f:
+with open(f"{DIR_PATH}\\src\\app_path.json", "r") as f:
     app_path_dict = json.load(f)
 
-with open(f"{DIR_PATH}\\db\\enc_mapping.db", "r") as f:
+with open(f"{DIR_PATH}\\src\\enc_mapping.db", "r") as f:
     data = f.read()
 
 data = aes.decrypt(data)    
@@ -63,7 +63,7 @@ def postprocessing():
     data['mapping_table'] = mapping_dict
     data['hash_table'] = hash_table
     data = aes.encrypt(json.dumps(data))
-    with open(f"{DIR_PATH}\\db\\enc_mapping.db", "w") as f:
+    with open(f"{DIR_PATH}\\src\\db\\enc_mapping.db", "w") as f:
         f.write(data)
 
 def ext2app(ext):
@@ -186,4 +186,3 @@ if __name__ == '__main__':
         hidden_file = hash_table[args.recoverfile]
         recovery(hidden_file)
         postprocessing()
-
