@@ -7,7 +7,9 @@ To access the hidden file, we utilize the link file (a.k.a. shortcuts) in Window
 
 This is the latest version for the deployment.  
 (Applying Encrypted & camouflaged DB / Adanced model / Right-Click Function ...)    
-If you want to see the test code, check the ```src```. &nbsp;(non-encrypted DB / non-advanced model )  
+If you want to see the test code, check the ```src```. &nbsp;(default key based encrypted / non-encrypted DB , non-advanced model )  
+
+[+] UPDATE: We apply password based encrypt, so that every function require password. (hide / recover / access file)
 
 ## usage
 
@@ -19,8 +21,9 @@ If you want to see the test code, check the ```src```. &nbsp;(non-encrypted DB /
 
 ### build
 ```bash
-> pyinstaller -u -F enc_adv_linker.py
-> pyinstaller -u -F hiding.py
+> ./init_db.py
+> pyinstaller -F enc_adv_linker.py
+> pyinstaller -F hiding.py
 > pyinstaller -F recovery.py
 > Set-RightClick.bat (Run as Administrator)
 ```

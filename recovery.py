@@ -22,20 +22,27 @@ aes = AESCipher()
 with open(f"{DIR_PATH}\\db\\enc_mapping.dll", "r") as f:
     data = f.read()
 
-data = aes.decrypt(data)    
+while True:
+    pw = getpass.getpass("PASSWORD? : ")
+    try:
+        data = aes.decrypt(data, pw)
+        if 'hidden_ext' in data:
+            break
+    except:
+        print("[-] PASSWORD Fail :(")
+
 data = json.loads(data.replace("'",'"'))    
 mapping_dict = data['mapping_table']
-RECOVERY_PASS = data['recovery_pass']
-rainbow_table = data['rainbow_table']
-
+hash_table = data['hash_table']
+    
 target_ext_list = []
 ext_icon_dict = {}
 
 def postprocessing():
     global data
     data['mapping_table'] = mapping_dict
-    data['rainbow_table'] = rainbow_table
-    data = aes.encrypt(json.dumps(data))
+    data['hash_table'] = hash_table
+    data = aes.encrypt(json.dumps(data), pw)
     with open(f"{DIR_PATH}\\db\\enc_mapping.dll", "w") as f:
         f.write(data)
 
@@ -53,17 +60,10 @@ def recovery(hidden_file):
         if os.path.exists(f'{file}.lnk'):
             os.remove(f'{file}.lnk')
         del mapping_dict[hidden_file]
-        del rainbow_table[hash_name(hidden_file)]
+        del hash_table[hash_name(hidden_file)]
         # print(f"[+] {hidden_file} => {file}")
     except:
         print(f"[-] {hidden_file} recovery fali :(")
-
-def auth():
-    pass_in = getpass.getpass("PASSWORD? : ")
-    if pass_in == RECOVERY_PASS:
-        return True
-    return False
-
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -78,17 +78,11 @@ if __name__ == '__main__':
     print("[*] File Recovery : lnk File => original File")
 
     if args.recover:
-        if not auth():
-            print("[-] PASSWORD failed :(")
-            sys.exit()
         for hidden_file in list(mapping_dict):
             recovery(hidden_file)
 
     elif args.recoverfile:
-        if not auth():
-            print("[-] PASSWORD failed :(")
-            sys.exit()
-        hidden_file = rainbow_table[args.recoverfile]
+        hidden_file = hash_table[args.recoverfile]
         recovery(hidden_file)
         
     postprocessing()

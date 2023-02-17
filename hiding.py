@@ -6,6 +6,7 @@ import random
 import win32com.client
 import argparse
 import hashlib
+import getpass
 from aes import AESCipher
 
 
@@ -27,12 +28,20 @@ with open(f"{DIR_PATH}\\db\\app_path.dll", "r") as f:
 with open(f"{DIR_PATH}\\db\\enc_mapping.dll", "r") as f:
     data = f.read()
 
-data = aes.decrypt(data)    
+while True:
+    pw = getpass.getpass("PASSWORD? : ")
+    try:
+        data = aes.decrypt(data, pw)
+        if 'hidden_ext' in data:
+            break
+    except:
+        print("[-] PASSWORD Fail :(")
+    
 data = json.loads(data.replace("'",'"'))    
 hidden_ext_list = data['hidden_ext']
 hidden_dir_dict = data['hidden_dir']
 mapping_dict = data['mapping_table']
-rainbow_table = data['rainbow_table']
+hash_table = data['hash_table']
 
 target_ext_list = []
 ext_icon_dict = {}
@@ -57,8 +66,8 @@ def preprocessing():
 def postprocessing():
     global data
     data['mapping_table'] = mapping_dict
-    data['rainbow_table'] = rainbow_table
-    data = aes.encrypt(json.dumps(data))
+    data['hash_table'] = hash_table
+    data = aes.encrypt(json.dumps(data), pw)
     with open(f"{DIR_PATH}\\db\\enc_mapping.dll", "w") as f:
         f.write(data)
 
@@ -107,7 +116,7 @@ def make_shortcuts(file):
         shortcut.IconLocation = ext_icon_dict[ext]
         shortcut.Save()
         mapping_dict[hidden_file] = file
-        rainbow_table[h_name] = hidden_file
+        hash_table[h_name] = hidden_file
         target_list.append(hidden_file)
         # print(f"[+] {file} => {hidden_file}")
     except:
