@@ -1,39 +1,39 @@
-import os
-import sys
-import getpass
-from aes import AESCipher
+""" Initializing database. """
 
-if getattr(sys, 'frozen', False):
-    file_path = sys.executable
-    file_name = file_path.split("\\")[-1]
-    DIR_PATH = file_path.split(f"\\dist\\{file_name}")[0]
-else:
-    file_path = os.path.abspath(__file__)
-    file_name = file_path.split("\\")[-1]
-    DIR_PATH = file_path.split(f"\\{file_name}")[0]
 
-aes = AESCipher()
+from modules.aes import AESCipher
+from modules.utils import get_dir_path, get_verified_password, read_file, write_file
 
-with open(f"{DIR_PATH}\\db\\mapping.db", "r") as f:
-    data = f.read()
-    
-pw = getpass.getpass("Enter PASSWORD : ")
-pw2 = getpass.getpass("Convfirm PASSWORD : ")
-if not pw or pw != pw2:
-    print("[-] PASSWORD ERROR")
-    sys.exit()
 
-data = aes.encrypt(data, pw)
-with open(f"{DIR_PATH}\\db\\enc_mapping.dll", "w") as f:
-    f.write(data)
+def main() -> None:
+    """
+    Main function that:
+    - Encrypts mapping.db using a password provided by the user.
+    - Writes the encrypted mapping data to a '.dll' file.
+    - Reads app_path.json and writes it to a '.dll' file.
 
-with open(f"{DIR_PATH}\\db\\app_path.json", "r") as f:
-    data = f.read()
+    The '.dll' file extension is used to store the database files to prevent 
+    ransomware attacks from targeting and encrypting these critical files. 
 
-with open(f"{DIR_PATH}\\db\\app_path.dll", "w") as f:
-    f.write(data)
-    
-# os.remove(f"{DIR_PATH}\\db\\mapping.db")
-# os.remove(f"{DIR_PATH}\\db\\app_path.json")
-        
-        
+    Output files:
+    - enc_mapping.dll: Encrypted mapping data.
+    - app_path.dll: Application path data (not encrypted).
+    """
+    dir_path = get_dir_path()
+    aes = AESCipher()
+
+    mapping_data = read_file(f"{dir_path}\\db\\mapping.db")
+    pw = get_verified_password(confirm=True)
+
+    enc_mapping = aes.encrypt(mapping_data, pw)
+    write_file(f"{dir_path}\\db\\enc_mapping.dll", enc_mapping)
+
+    app_path_data = read_file(f"{dir_path}\\db\\app_path.json")
+    write_file(f"{dir_path}\\db\\app_path.dll", app_path_data)
+
+    # os.remove(f"{DIR_PATH}\\db\\mapping.db")
+    # os.remove(f"{DIR_PATH}\\db\\app_path.json")
+
+
+if __name__ == '__main__':
+    main()

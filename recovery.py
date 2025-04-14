@@ -1,90 +1,88 @@
+"""
+This module handles the recovery of files that were previously hidden.
+It renames obfuscated files back to their original names and removes
+associated shortcuts.
+
+Usage:
+    python recovery.py --hash <hashed_file_name>  # Recover a specific file
+    python recovery.py --all                      # Recover all hidden files
+"""
+
+
 import os
 import sys
 import json
-import getpass
 import argparse
-import hashlib
-from aes import AESCipher
+
+from modules.aes import AESCipher
+from modules.utils import get_dir_path, load_encrypted_data
+from modules.linker_utils import hash_name, postprocessing
 
 
-# GET DEFAULT PATH
-if getattr(sys, 'frozen', False):
-    file_path = sys.executable
-    file_name = file_path.split("\\")[-1]
-    DIR_PATH = file_path.split(f"\\dist\\{file_name}")[0]
-else:
-    file_path = os.path.abspath(__file__)
-    file_name = file_path.split("\\")[-1]
-    DIR_PATH = file_path.split(f"\\{file_name}")[0]
+def recovery(hidden_file: str, mapping_dict: dict, hash_table: dict) -> None:
+    """
+    Recovers a hidden file to its original location and removes its associated shortcut.
 
-aes = AESCipher()
-
-with open(f"{DIR_PATH}\\db\\enc_mapping.dll", "r") as f:
-    data = f.read()
-
-while True:
-    pw = getpass.getpass("PASSWORD? : ")
+    Args:
+        hidden_file (str): Path to the hidden file.
+        mapping_dict (Dict[str, str]): Mapping of hidden file paths to their original file paths.
+        hash_table (Dict[str, str]): Mapping of hashed names to hidden file paths.
+    """
     try:
-        data = aes.decrypt(data, pw)
-        if 'hidden_ext' in data:
-            break
-    except:
-        print("[-] PASSWORD Fail :(")
+        original_file = mapping_dict[hidden_file]
+        os.rename(hidden_file, original_file)
+        shortcut_path = f"{original_file}.lnk"
+        if os.path.exists(shortcut_path):
+            os.remove(shortcut_path)
+        mapping_dict.pop(hidden_file, None)
+        h_name = hash_name(hidden_file)
+        hash_table.pop(h_name, None)
+        print(f"[+] Recovered: {hidden_file} -> {original_file}")
 
-data = json.loads(data.replace("'",'"'))    
-mapping_dict = data['mapping_table']
-hash_table = data['hash_table']
-    
-target_ext_list = []
-ext_icon_dict = {}
+    except Exception as e:
+        print(f"[-] Failed to recover {hidden_file}: {e}")
 
-def postprocessing():
-    global data
+
+def main(hashed_name: str = "", recover_all: bool = False):
+    """
+    Main function to recover hidden files based on their hash or recover all hidden files.
+
+    Args:
+        hashed_name (str): The hashed name of the file to recover.
+        recover_all (bool): Flag to indicate recovery of all hidden files.
+    """
+    aes = AESCipher()
+
+    enc_mapping_filepath = os.path.join(get_dir_path(), "db", "enc_mapping.dll")
+    raw_data, pw = load_encrypted_data(enc_mapping_filepath, aes, prompt="PASSWORD? : ")
+    data = json.loads(raw_data.replace("'", '"'))
+
+    mapping_dict = data['mapping_table']
+    hash_table = data['hash_table']
+
+    if recover_all:
+        for hidden_file in list(mapping_dict.keys()):
+            recovery(hidden_file, mapping_dict, hash_table)
+    else:
+        if hashed_name in hash_table:
+            hidden_file = hash_table.get(hashed_name)
+            recovery(hidden_file, mapping_dict, hash_table)
+        else:
+            print("[-] Provided hash not found.")
+            sys.exit(1)
+
     data['mapping_table'] = mapping_dict
     data['hash_table'] = hash_table
-    data = aes.encrypt(json.dumps(data), pw)
-    with open(f"{DIR_PATH}\\db\\enc_mapping.dll", "w") as f:
-        f.write(data)
+    postprocessing(data, aes, pw, enc_mapping_filepath)
 
-def hash_name(name):
-    sha = hashlib.new('sha1')
-    sha.update(name.encode())
-    
-    return sha.hexdigest()
-
-def recovery(hidden_file):
-    cmd = ""
-    try:
-        file = mapping_dict[hidden_file]
-        os.rename(hidden_file, file)
-        if os.path.exists(f'{file}.lnk'):
-            os.remove(f'{file}.lnk')
-        del mapping_dict[hidden_file]
-        del hash_table[hash_name(hidden_file)]
-        # print(f"[+] {hidden_file} => {file}")
-    except:
-        print(f"[-] {hidden_file} recovery fali :(")
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--recover', required=False, action='store_true')
-    parser.add_argument('--recoverfile', required=False, type=str, help='File Path')
+    parser.add_argument('--hash', type=str, help="Recover specific file using its hash")
+    parser.add_argument('--all', action='store_true', help="Recover all hidden files")
     args = parser.parse_args()
 
-    if len(sys.argv) != 2 and len(sys.argv) != 3:
-        print("Usage: ./linking.py [option] ([arg])")
-        sys.exit()
+    if not (args.hash or args.all):
+        raise ValueError("[-] Usage: recover.py --all OR --hash <hash>")
 
-    print("[*] File Recovery : lnk File => original File")
-
-    if args.recover:
-        for hidden_file in list(mapping_dict):
-            recovery(hidden_file)
-
-    elif args.recoverfile:
-        hidden_file = hash_table[args.recoverfile]
-        recovery(hidden_file)
-        
-    postprocessing()
-    
-    
+    main(args.hash, args.all)

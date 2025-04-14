@@ -1,157 +1,192 @@
+"""
+This module provides functionality for securely hiding files by:
+- Moving original files to hidden files with obfuscated names.
+- Storing mappings of original_file_path and hidden_file_path in an encrypted database.
+- Creating shortcuts for easy access to hidden files.
+
+Usage:
+    python hiding.py --file_path <file_path>  # Hides a specific file
+    python hiding.py --testbed                # Hides all files in the testbed folder
+"""
+
+
 import os
 import sys
 import json
-import string
-import random
-import win32com.client
 import argparse
-import hashlib
-import getpass
-from aes import AESCipher
+from dataclasses import dataclass
+
+import win32com.client
+
+from modules.aes import AESCipher
+from modules.utils import get_dir_path, load_json, load_encrypted_data
+from modules.linker_utils import ext2app, hash_name, name_gen, postprocessing
 
 
-# GET DEFAULT PATH
-if getattr(sys, 'frozen', False):
-    file_path = sys.executable
-    file_name = file_path.split("\\")[-1]
-    DIR_PATH = file_path.split(f"\\dist\\{file_name}")[0]
-else:
-    file_path = os.path.abspath(__file__)
-    file_name = file_path.split("\\")[-1]
-    DIR_PATH = file_path.split(f"\\{file_name}")[0]
+@dataclass
+class MappingDB:
+    """
+    A data class to hold information in the enc_mapping.dll(mapping.db).
 
-aes = AESCipher()
+    Attributes:
+        hidden_ext_list (list): List of supported file extensions for hiding.
+        hidden_dir_dict (dict): Dictionary of hidden directories.
+        mapping_dict (dict): Mapping of hidden file paths to their original names.
+        hash_table (dict): Mapping of hashed names to hidden file paths.
+    """
+    hidden_ext_list: list
+    hidden_dir_dict: dict
+    mapping_dict: dict
+    hash_table: dict
 
-with open(f"{DIR_PATH}\\db\\app_path.dll", "r") as f:
-    app_path_dict = json.load(f)
 
-with open(f"{DIR_PATH}\\db\\enc_mapping.dll", "r") as f:
-    data = f.read()
+DIR_PATH = get_dir_path()
+MAPPING_DB = MappingDB([], {}, {}, {})
 
-while True:
-    pw = getpass.getpass("PASSWORD? : ")
-    try:
-        data = aes.decrypt(data, pw)
-        if 'hidden_ext' in data:
-            break
-    except:
-        print("[-] PASSWORD Fail :(")
-    
-data = json.loads(data.replace("'",'"'))    
-hidden_ext_list = data['hidden_ext']
-hidden_dir_dict = data['hidden_dir']
-mapping_dict = data['mapping_table']
-hash_table = data['hash_table']
 
-target_ext_list = []
-ext_icon_dict = {}
+def preprocessing(app_path_dict: dict) -> dict:
+    """
+    Prepares and validates the environment for file hiding.
 
-def preprocessing():
-    for key in list(hidden_dir_dict.keys()):
-        if not os.path.exists(hidden_dir_dict[key]):
-            print(f"[-] {key} doesn't exists.")
-            del hidden_dir_dict[key]
+    Args:
+        app_path_dict (dict): Dictionary containing application paths and extensions.
 
+    Returns:
+        dict: A dictionary mapping file extensions to their corresponding icon paths.
+    """
+    for key in list(MAPPING_DB.hidden_dir_dict.keys()):
+        if not os.path.exists(MAPPING_DB.hidden_dir_dict.get(key)):
+            print(f"[-] {key} directory doesn't exist.")
+            MAPPING_DB.hidden_dir_dict.pop(key)
+
+    ext_icon_dict = {}
     for key in list(app_path_dict.keys()):
-        if not os.path.exists(app_path_dict[key]['path']):
-            print(f"[-] {key} doesn't exists.")
-            del app_path_dict[key]
+        app = app_path_dict[key]
+        if not os.path.exists(app.get('path', '')):
+            print(f"[-] {key} application doesn't exist.")
+            app_path_dict.pop(key)
+        else:
+            for ext in app.get("ext", []):
+                ext_icon_dict[ext] = os.path.join(DIR_PATH, "icon", app.get("ico", ""))
+    print("[*] Supported Extensions:", ext_icon_dict.keys())
+    return ext_icon_dict
 
-    for app in app_path_dict.values():
-        for ext in app['ext']:
-            target_ext_list.append(ext) 
-            ext_icon_dict[ext] = f"{DIR_PATH}\\icon\\{app['ico']}"
-    print(f"[*] Supported Extension: {target_ext_list}")
 
-def postprocessing():
-    global data
-    data['mapping_table'] = mapping_dict
-    data['hash_table'] = hash_table
-    data = aes.encrypt(json.dumps(data), pw)
-    with open(f"{DIR_PATH}\\db\\enc_mapping.dll", "w") as f:
-        f.write(data)
+def make_shortcut(file_path, app_path_dict, ext_icon_dict) -> str:
+    """
+    Hides a file by creating a shortcut to it.
 
-def ext2app(ext):
-    for app in app_path_dict.keys():
-        if ext in app_path_dict[app]['ext']:
-            return app_path_dict[app]['path']
+    Args:
+        file_path (str): The path of the file to be hidden.
+        app_path_dict (dict): Dictionary containing application paths and extensions.
+        ext_icon_dict (dict): Extension-to-icon mapping.
 
-    return ""
+    Returns:
+        Optional[str]: The path of the hidden file, or None if hiding failed.
+    """
+    ext = file_path.split('.')[-1].lower()
+    if ext not in ext_icon_dict:
+        return None
+    app_path = ext2app(ext, app_path_dict)
+    if not app_path:
+        return None
 
-def name_gen(len=8):
-    name = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(len))
-    ext = random.choice(hidden_ext_list)
+    new_name = name_gen(MAPPING_DB.hidden_ext_list)
+    hidden_file_path = os.path.join(MAPPING_DB.hidden_dir_dict.get('help'), new_name)
+    shortcut_path = f"{file_path}.lnk"
+    hashed_name = hash_name(hidden_file_path)
 
-    return f"{name}.{ext}"
-
-def hash_name(name):
-    sha = hashlib.new('sha1')
-    sha.update(name.encode())
-    
-    return sha.hexdigest()
-
-def make_shortcuts(file):
-    ext = file.split(".")[-1].lower()
-    if ext not in target_ext_list:
-        return
-    app_path = ext2app(ext)
-    if not app_path:        
-        return
-    new_name = name_gen()
-    hidden_file = f"{hidden_dir_dict['help']}\\{new_name}"
-    shortcut_path = f"{file}.lnk"
-    h_name = hash_name(hidden_file)
     try:
-        os.rename(file, hidden_file)
+        os.rename(file_path, hidden_file_path)
         shell = win32com.client.Dispatch("WScript.Shell")
         shortcut = shell.CreateShortcut(shortcut_path)
-        # Open with Python (FOR TEST)
-        '''
-        shortcut.Targetpath = 'python'
-        shortcut.Arguments = f'"{DIR_PATH}\\enc_adv_linker.py" --name {h_name}'
-        '''
-        # Open with execute file (FOR DIST)
-        shortcut.Targetpath = f'{DIR_PATH}\\dist\\enc_adv_linker.exe'
-        shortcut.Arguments = f'--name {h_name}'
-        shortcut.IconLocation = ext_icon_dict[ext]
-        shortcut.Save()
-        mapping_dict[hidden_file] = file
-        hash_table[h_name] = hidden_file
-        target_list.append(hidden_file)
-        # print(f"[+] {file} => {hidden_file}")
-    except:
-        print(f"[-] {file} hiding fali :(")
 
-def sychronize(target_list):
+        # python script (for test)
+        shortcut.Targetpath = 'python'
+        shortcut.Arguments = f'"{DIR_PATH}\\linker.py" --hash {hashed_name}'
+        # executable (for release)
+        if getattr(sys, 'frozen', False):
+            shortcut.Targetpath = os.path.join(DIR_PATH, "dist", "linker.exe")
+            shortcut.Arguments = f'--hash {hashed_name}'
+
+        shortcut.IconLocation = ext_icon_dict.get(ext, "")
+        shortcut.Save()
+
+        MAPPING_DB.mapping_dict[hidden_file_path] = file_path
+        MAPPING_DB.hash_table[hashed_name] = hidden_file_path
+
+        print(f"[+] Hiding success: {file_path} -> {hidden_file_path}")
+        return hidden_file_path
+
+    except Exception as e:
+        print(f"[-] Failed to hide {file_path}: {e}")
+        return None
+
+
+def synchronize(target_list: list, mapping_dict: dict):
+    """
+    Synchronizes hidden files with their corresponding shortcuts.
+
+    Args:
+        target_list (list): List of hidden file paths.
+        mapping_dict (dict): Mapping of hidden files to their original files.
+    """
     for hidden_file in target_list:
-        shortcut_path = f'{mapping_dict[hidden_file]}.lnk'
-        file_st = os.stat(hidden_file)
-        os.utime(shortcut_path,(file_st.st_atime,file_st.st_mtime))
+        original_file = mapping_dict.get(hidden_file)
+        shortcut_path = f"{original_file}.lnk"
+        if os.path.exists(hidden_file) and os.path.exists(shortcut_path):
+            file_st = os.stat(hidden_file)
+            os.utime(shortcut_path, (file_st.st_atime, file_st.st_mtime))
+
+
+def main(file_path: str = "", is_test: bool = False):
+    """
+    Main function to hide files by creating shortcuts and managing file mappings.
+
+    Args:
+        file_path (str): Path of the file to hide. If None, hides all files in the testbed folder.
+        is_test (bool): Whether to hide all files in the testbed folder.
+    """
+    aes = AESCipher()
+
+    app_path_filepath = os.path.join(DIR_PATH, "db", "app_path.dll")
+    app_path_dict = load_json(app_path_filepath)
+    enc_mapping_filepath = os.path.join(DIR_PATH, "db", "enc_mapping.dll")
+    raw_data, pw = load_encrypted_data(enc_mapping_filepath, aes, prompt="PASSWORD? : ")
+    data = json.loads(raw_data.replace("'", '"'))
+
+    MAPPING_DB.hidden_ext_list = data['hidden_ext']
+    MAPPING_DB.hidden_dir_dict = data['hidden_dir']
+    MAPPING_DB.mapping_dict = data['mapping_table']
+    MAPPING_DB.hash_table = data['hash_table']
+
+    ext_icon_dict = preprocessing(app_path_dict)
+
+    if is_test:
+        target_path = os.path.join(DIR_PATH, "testbed")
+        if not os.path.exists(target_path):
+            print("[-] Testbed folder does not exist.")
+            sys.exit(1)
+        target_list = []
+        for file in os.listdir(target_path):
+            file_path = os.path.join(target_path, file)
+            target_list.append(make_shortcut(file_path, app_path_dict, ext_icon_dict))
+    else:
+        target_list = [make_shortcut(file_path, app_path_dict, ext_icon_dict)]
+
+    data['mapping_table'] = MAPPING_DB.mapping_dict
+    data['hash_table'] = MAPPING_DB.hash_table
+    postprocessing(data, aes, pw, enc_mapping_filepath)
+    synchronize(target_list, MAPPING_DB.mapping_dict)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--hide', required=False, action='store_true')
-    parser.add_argument('--hidefile', required=False, type=str, help='File Path')
+    parser.add_argument('--file_path', type=str, help="Hide specific file (provide full path)")
+    parser.add_argument('--testbed', action='store_true', help="Hide all files in testbed folder")
     args = parser.parse_args()
 
-    if len(sys.argv) != 2 and len(sys.argv) != 3:
-        print("Usage: ./linking.py [option] ([arg])")
-        sys.exit()
+    if not (args.file_path or args.testbed):
+        raise ValueError("[-] Usage: hiding.py --file_path OR --testbed <file_path>")
 
-    preprocessing()
-    
-    target_list = []
-    if args.hide:
-        target_path = f"{DIR_PATH}\\testbed"
-        file_list = os.listdir(target_path)
-        for file in file_list:
-            make_shortcuts(f"{target_path}\\{file}")
-
-    elif args.hidefile:
-        make_shortcuts(args.hidefile)
-    
-    postprocessing()
-    sychronize(target_list)
-    
-    
+    main(args.file_path, args.testbed)
