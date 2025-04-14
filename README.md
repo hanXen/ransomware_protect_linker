@@ -1,40 +1,64 @@
 # ransomware_protect_linker
-A Proof-of-Concept for avoid ransomware impact by camouflage & hide files.
+Welcome to the official repository for the implementation of methods and algorithms presented in our research paper:
 
-The main idea is that the most of ransomwares don't encrypt the system files. (.exe, .dll ...)
+### 📄 **"Hiding in the Crowd: Ransomware Protection by Adopting Camouflage and Hiding Strategy With the Link File"**
+- 📌 Authors: Soohan Lee _et al._   
+- 📌 Published in: IEEE ACCESS  
+- 🔗 [Read the Full Paper Here](https://doi.org/10.1109/ACCESS.2023.3309879)
 
-To access the hidden file, we utilize the link file (a.k.a. shortcuts) in Windows to solve the usablity issue.
+---
 
-This is the latest version for the deployment.  
-(Applying Encrypted & camouflaged DB / Adanced model / Right-Click Function ...)    
-If you want to see the test code, check the ```src```. &nbsp;(default key based encrypted / non-encrypted DB , non-advanced model )  
+### **🧠 Key Concept**
 
-[+] UPDATE: Apply password based encrypt, every function requires password. (hide / recover / access file)
+The main idea: **Most ransomware does not target system files like `.exe` or `.dll`.** By camouflaging files with these types of extensions and hiding them in system file paths, we enhance file security.
 
-## usage
+To solve usability challenges, we use Windows shortcut files (a.k.a. link files) to provide seamless access to hidden files without compromising security.
 
-### requirements
-```bash
-> pip install pycryptodome
-> pip install pywin32
-```
+---
 
-### build
-```bash
-> ./init_db.py
-> pyinstaller -F enc_adv_linker.py
-> pyinstaller -F hiding.py
-> pyinstaller -F recovery.py
-> Set-RightClick.bat (Run as Administrator)
-```
-### run
-```bash
-# Hide All Files (testbed Directory) (Run as Administrator)
-> hiding.exe -hide
-# Hide File (or you can just rigt-click the file) (Run as Administrator)
-> hiding.exe --hidefile [filename]
-# Recover All Files (testbed Directory)
-> recovery.exe --recover
-# Recover File (Extract) (or you can just rigt-click the file)
-> recovery.exe --recoverfile
-```
+## Usage
+
+### Installation
+1. Install [uv](https://docs.astral.sh/uv/getting-started/installation/) and sync:
+
+    ```bash
+    uv sync
+    ```
+
+2. Build the project:
+
+    ```powershell
+    powershell -exec bypass -f install.ps1
+    Set-RightClick.bat (Run as Administrator)
+    ```
+
+---
+
+### Run
+
+1. **Hiding Files:**
+
+    ```powershell
+    # Hide All Files (from the testbed Directory) (Run as Administrator)
+    hiding.exe --testbed
+
+    # Hide a Specific File (or you can just right-click the file) (Run as Administrator)
+    hiding.exe --file_path [filename]
+    ```
+
+2. **Recovery:**
+
+    ```powershell
+    # Recover All Files
+    recovery.exe --all
+
+    # Recover a Specific File (Extract) (or you can just right-click the file)
+    recovery.exe --file_hash [hash]
+    ```
+
+---
+
+### Remove Registry Entries
+
+```powershell
+> Remove-RightClick.bat (Run as Administrator)
