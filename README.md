@@ -10,7 +10,7 @@ Welcome to the official repository for the implementation of methods and algorit
 
 ### **🧠 Key Concept**
 
-The main idea: **Most ransomware does not target system files like `.exe` or `.dll`.** By camouflaging files with these types of extensions and hiding them in system file paths, we enhance file security.
+**The main idea**: _Most ransomware does not target system files like `.exe` or `.dll`, or system file directories (e.g., Program Files, System32)._ By camouflaging files with these types of extensions and hiding them in system file directories, we can safeguard valuable data from ransomware attacks in a cost-effective manner.
 
 To solve usability challenges, we use Windows shortcut files (a.k.a. link files) to provide seamless access to hidden files without compromising security.
 
