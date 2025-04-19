@@ -9,10 +9,10 @@ def main() -> None:
     """
     Main function that:
     - Encrypts mapping.db using a password provided by the user.
-    - Writes the encrypted mapping data to a '.dll' file.
-    - Reads app_path.json and writes it to a '.dll' file.
+    - Writes the encrypted mapping data to a ".dll" file.
+    - Reads app_path.json and writes it to a ".dll" file.
 
-    The '.dll' file extension is used to store the database files to prevent 
+    The ".dll" file extension is used to store the database files to prevent 
     ransomware attacks from targeting and encrypting these critical files. 
 
     Output files:
@@ -35,5 +35,5 @@ def main() -> None:
     # os.remove(f"{DIR_PATH}\\db\\app_path.json")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

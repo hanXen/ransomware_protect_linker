@@ -61,7 +61,7 @@ def preprocessing() -> dict[str, str]:
     ext_icon_dict = {}
     for key in list(APP_PATH_DB.keys()):
         app = APP_PATH_DB.get(key)
-        if not os.path.exists(app.get('path', '')):
+        if not os.path.exists(app.get("path", "")):
             print(f"[-] {key} application doesn't exist.")
             APP_PATH_DB.pop(key)
         else:
@@ -83,7 +83,7 @@ def make_shortcut(file_path: str, ext_icon_dict: dict[str, str], hidden_dir_key:
     Returns:
         Optional[str]: The path of the hidden file, or None if hiding failed.
     """
-    ext = file_path.split('.')[-1].lower()
+    ext = file_path.split(".")[-1].lower()
     if ext not in ext_icon_dict:
         print(f"[-] Failed to hide {file_path}. Extension {ext} is not supported.")
         return None
@@ -105,12 +105,12 @@ def make_shortcut(file_path: str, ext_icon_dict: dict[str, str], hidden_dir_key:
         shortcut = shell.CreateShortcut(shortcut_path)
 
         # python script (for test)
-        shortcut.Targetpath = 'python'
-        shortcut.Arguments = f'"{DIR_PATH}\\linker.py" --hash {hashed_name}'
+        shortcut.Targetpath = "python"
+        shortcut.Arguments = f"\"{DIR_PATH}\\linker.py\" --hash {hashed_name}"
         # executable (for release)
-        if getattr(sys, 'frozen', False):
+        if getattr(sys, "frozen", False):
             shortcut.Targetpath = os.path.join(DIR_PATH, "dist", "linker.exe")
-            shortcut.Arguments = f'--hash {hashed_name}'
+            shortcut.Arguments = f"--hash {hashed_name}"
 
         shortcut.IconLocation = ext_icon_dict.get(ext, "")
         shortcut.Save()
@@ -156,10 +156,10 @@ def main(file_path: str = "", is_test: bool = False) -> None:
     raw_data, pw = load_encrypted_data(enc_mapping_filepath, aes, prompt="PASSWORD? : ")
     data = json.loads(raw_data.replace("'", '"'))
 
-    MAPPING_DB.hidden_ext_list = data['hidden_ext']
-    MAPPING_DB.hidden_dir_dict = data['hidden_dir']
-    MAPPING_DB.mapping_dict = data['mapping_table']
-    MAPPING_DB.hash_table = data['hash_table']
+    MAPPING_DB.hidden_ext_list = data["hidden_ext"]
+    MAPPING_DB.hidden_dir_dict = data["hidden_dir"]
+    MAPPING_DB.mapping_dict = data["mapping_table"]
+    MAPPING_DB.hash_table = data["hash_table"]
 
     ext_icon_dict = preprocessing()
 
@@ -171,21 +171,21 @@ def main(file_path: str = "", is_test: bool = False) -> None:
         target_list = []
         for file in os.listdir(target_path):
             file_path = os.path.join(target_path, file)
-            # 'help' is hardcoded as the hidden_dir_key for testing purposes
-            target_list.append(make_shortcut(file_path, ext_icon_dict, hidden_dir_key='help')) 
+            # "help" is hardcoded as the hidden_dir_key for testing purposes
+            target_list.append(make_shortcut(file_path, ext_icon_dict, hidden_dir_key="help")) 
     else:
         target_list = [make_shortcut(file_path, ext_icon_dict)]
 
-    data['mapping_table'] = MAPPING_DB.mapping_dict
-    data['hash_table'] = MAPPING_DB.hash_table
+    data["mapping_table"] = MAPPING_DB.mapping_dict
+    data["hash_table"] = MAPPING_DB.hash_table
     postprocessing(data, aes, pw, enc_mapping_filepath)
     synchronize(target_list, MAPPING_DB.mapping_dict)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--file_path', type=str, help="Hide specific file (provide full path)")
-    parser.add_argument('--testbed', action='store_true', help="Hide all files in testbed folder")
+    parser.add_argument("--file_path", type=str, help="Hide specific file (provide full path)")
+    parser.add_argument("--testbed", action="store_true", help="Hide all files in testbed folder")
     args = parser.parse_args()
 
     if not (args.file_path or args.testbed):

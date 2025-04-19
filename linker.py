@@ -41,8 +41,8 @@ def main(hashed_name: str) -> None:
     enc_mapping_filepath = f"{dir_path}//db//enc_mapping.dll"
     raw_data, _ = load_encrypted_data(enc_mapping_filepath, aes, prompt="PASSWORD? : ")
     data = json.loads(raw_data.replace("'", '"'))
-    mapping_dict = data['mapping_table']
-    hash_table = data['hash_table']
+    mapping_dict = data["mapping_table"]
+    hash_table = data["hash_table"]
 
     if hashed_name not in hash_table:
         print("[-] Provided file hash name not found.")
@@ -53,15 +53,15 @@ def main(hashed_name: str) -> None:
         sys.exit(1)
 
     file_name = mapping_dict[hidden_name]
-    ext = file_name.split('.')[-1]
+    ext = file_name.split(".")[-1]
     app = ext2app(ext, app_path_dict)
     if not app:
         print("[-] No application mapped for the file extension.")
         sys.exit(1)
 
-    if ext in app_path_dict.get('photo', {}).get('ext', []):
+    if ext in app_path_dict.get("photo", {}).get("ext", []):
         arg = app_path_dict["photo"].get("arg", "")
-        cmd = f'{app} {arg} {hidden_name}'
+        cmd = f"{app} {arg} {hidden_name}"
     else:
         cmd = [app, hidden_name]
 
@@ -74,7 +74,7 @@ if __name__ == "__main__":
         description="Link file via hashed filename.",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
-    parser.add_argument('--hash', required=True, help="Hashed filename")
+    parser.add_argument("--hash", required=True, help="Hashed filename")
     args = parser.parse_args()
 
     main(hashed_name=args.hash)

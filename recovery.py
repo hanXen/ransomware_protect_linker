@@ -57,8 +57,8 @@ def main(hashed_name: str = "", recover_all: bool = False):
     raw_data, pw = load_encrypted_data(enc_mapping_filepath, aes, prompt="PASSWORD? : ")
     data = json.loads(raw_data.replace("'", '"'))
 
-    mapping_dict = data['mapping_table']
-    hash_table = data['hash_table']
+    mapping_dict = data["mapping_table"]
+    hash_table = data["hash_table"]
 
     if recover_all:
         for hidden_file in list(mapping_dict.keys()):
@@ -71,15 +71,15 @@ def main(hashed_name: str = "", recover_all: bool = False):
             print("[-] Provided hash not found.")
             sys.exit(1)
 
-    data['mapping_table'] = mapping_dict
-    data['hash_table'] = hash_table
+    data["mapping_table"] = mapping_dict
+    data["hash_table"] = hash_table
     postprocessing(data, aes, pw, enc_mapping_filepath)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--hash', type=str, help="Recover specific file using its hash")
-    parser.add_argument('--all', action='store_true', help="Recover all hidden files")
+    parser.add_argument("--hash", type=str, help="Recover specific file using its hash")
+    parser.add_argument("--all", action="store_true", help="Recover all hidden files")
     args = parser.parse_args()
 
     if not (args.hash or args.all):

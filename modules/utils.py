@@ -26,7 +26,7 @@ def get_dir_path() -> str:
     Returns:
         str: The base directory path.
     """
-    if getattr(sys, 'frozen', False):  # When running as a bundled executable
+    if getattr(sys, "frozen", False):  # When running as a bundled executable
         file_path = sys.executable
         file_name = os.path.basename(file_path)
         return file_path.split(f"\\dist\\{file_name}", maxsplit=1)[0]
@@ -122,7 +122,7 @@ def load_encrypted_data(filepath: str, aes: AESCipher, prompt: str = "PASSWORD? 
         pw = getpass.getpass(prompt)
         try:
             dec_data = aes.decrypt(data, pw)
-            if 'hidden_ext' in dec_data or 'mapping_table' in dec_data:
+            if "hidden_ext" in dec_data or "mapping_table" in dec_data:
                 return dec_data, pw
         except Exception:
             print("[-] PASSWORD Fail :(")

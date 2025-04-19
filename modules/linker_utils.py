@@ -20,7 +20,7 @@ def ext2app(ext: str, app_path_db: dict[str, dict[str, Any]]) -> str:
     Maps a file extension to the corresponding application path.
 
     Args:
-        ext (str): The file extension (e.g., 'txt', 'jpg').
+        ext (str): The file extension (e.g., "txt", "jpg").
         app_path_dict (dict): A dictionary mapping application names
                               to their properties, including supported extensions.
 
@@ -44,7 +44,7 @@ def hash_name(name: str) -> str:
     Returns:
         str: The hexadecimal SHA-1 hash of the input string.
     """
-    sha = hashlib.new('sha1')
+    sha = hashlib.new("sha1")
     sha.update(name.encode())
     return sha.hexdigest()
 
@@ -60,7 +60,7 @@ def name_gen(hidden_ext_list: list[str], length: int = 8) -> str:
     Returns:
         str: A randomly generated file name with an extension.
     """
-    name = ''.join(random.choice(string.ascii_letters + string.digits) for _ in range(length))
+    name = "".join(random.choice(string.ascii_letters + string.digits) for _ in range(length))
     ext = random.choice(hidden_ext_list)
     return f"{name}.{ext}"
 
