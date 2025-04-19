@@ -13,6 +13,7 @@ Usage:
 import os
 import sys
 import json
+import random
 import argparse
 from dataclasses import dataclass
 
@@ -70,13 +71,14 @@ def preprocessing() -> dict[str, str]:
     return ext_icon_dict
 
 
-def make_shortcut(file_path: str, ext_icon_dict: dict[str, str]) -> str | None:
+def make_shortcut(file_path: str, ext_icon_dict: dict[str, str], hidden_dir_key: str = "") -> str | None:
     """
     Hides a file by creating a shortcut to it.
 
     Args:
         file_path (str): The path of the file to be hidden.
         ext_icon_dict (dict): Extension-to-icon mapping.
+        hidden_dir_key (str): The key of the directory for hidden files. If not provided, a random key is chosen.
 
     Returns:
         Optional[str]: The path of the hidden file, or None if hiding failed.
@@ -91,7 +93,9 @@ def make_shortcut(file_path: str, ext_icon_dict: dict[str, str]) -> str | None:
         return None
 
     new_name = name_gen(MAPPING_DB.hidden_ext_list)
-    hidden_file_path = os.path.join(MAPPING_DB.hidden_dir_dict.get('help'), new_name)
+    if not hidden_dir_key:
+        hidden_dir_key = random.choice(list(MAPPING_DB.hidden_dir_dict.keys()))
+    hidden_file_path = os.path.join(MAPPING_DB.hidden_dir_dict.get(hidden_dir_key), new_name)
     shortcut_path = f"{file_path}.lnk"
     hashed_name = hash_name(hidden_file_path)
 
@@ -167,7 +171,8 @@ def main(file_path: str = "", is_test: bool = False) -> None:
         target_list = []
         for file in os.listdir(target_path):
             file_path = os.path.join(target_path, file)
-            target_list.append(make_shortcut(file_path, ext_icon_dict))
+            # 'help' is hardcoded as the hidden_dir_key for testing purposes
+            target_list.append(make_shortcut(file_path, ext_icon_dict, hidden_dir_key='help')) 
     else:
         target_list = [make_shortcut(file_path, ext_icon_dict)]
 
