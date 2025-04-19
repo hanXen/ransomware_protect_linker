@@ -41,15 +41,13 @@ class MappingDB:
 
 
 DIR_PATH = get_dir_path()
-MAPPING_DB = MappingDB([], {}, {}, {})
+MAPPING_DB = MappingDB(list(), dict(), dict(), dict())
+APP_PATH_DB = load_json(os.path.join(DIR_PATH, "db", "app_path.dll"))
 
 
-def preprocessing(app_path_dict: dict) -> dict:
+def preprocessing() -> dict[str, str]:
     """
     Prepares and validates the environment for file hiding.
-
-    Args:
-        app_path_dict (dict): Dictionary containing application paths and extensions.
 
     Returns:
         dict: A dictionary mapping file extensions to their corresponding icon paths.
@@ -60,11 +58,11 @@ def preprocessing(app_path_dict: dict) -> dict:
             MAPPING_DB.hidden_dir_dict.pop(key)
 
     ext_icon_dict = {}
-    for key in list(app_path_dict.keys()):
-        app = app_path_dict[key]
+    for key in list(APP_PATH_DB.keys()):
+        app = APP_PATH_DB.get(key)
         if not os.path.exists(app.get('path', '')):
             print(f"[-] {key} application doesn't exist.")
-            app_path_dict.pop(key)
+            APP_PATH_DB.pop(key)
         else:
             for ext in app.get("ext", []):
                 ext_icon_dict[ext] = os.path.join(DIR_PATH, "icon", app.get("ico", ""))
@@ -72,13 +70,12 @@ def preprocessing(app_path_dict: dict) -> dict:
     return ext_icon_dict
 
 
-def make_shortcut(file_path, app_path_dict, ext_icon_dict) -> str:
+def make_shortcut(file_path: str, ext_icon_dict: dict[str, str]) -> str | None:
     """
     Hides a file by creating a shortcut to it.
 
     Args:
         file_path (str): The path of the file to be hidden.
-        app_path_dict (dict): Dictionary containing application paths and extensions.
         ext_icon_dict (dict): Extension-to-icon mapping.
 
     Returns:
@@ -86,9 +83,11 @@ def make_shortcut(file_path, app_path_dict, ext_icon_dict) -> str:
     """
     ext = file_path.split('.')[-1].lower()
     if ext not in ext_icon_dict:
+        print(f"[-] Failed to hide {file_path}. Extension {ext} is not supported.")
         return None
-    app_path = ext2app(ext, app_path_dict)
+    app_path = ext2app(ext, APP_PATH_DB)
     if not app_path:
+        print(f"[-] Failed to hide {file_path}. No application path found for the extension: {ext}.")
         return None
 
     new_name = name_gen(MAPPING_DB.hidden_ext_list)
@@ -123,7 +122,7 @@ def make_shortcut(file_path, app_path_dict, ext_icon_dict) -> str:
         return None
 
 
-def synchronize(target_list: list, mapping_dict: dict):
+def synchronize(target_list: list[str], mapping_dict: dict[str, str]) -> None:
     """
     Synchronizes hidden files with their corresponding shortcuts.
 
@@ -139,7 +138,7 @@ def synchronize(target_list: list, mapping_dict: dict):
             os.utime(shortcut_path, (file_st.st_atime, file_st.st_mtime))
 
 
-def main(file_path: str = "", is_test: bool = False):
+def main(file_path: str = "", is_test: bool = False) -> None:
     """
     Main function to hide files by creating shortcuts and managing file mappings.
 
@@ -149,8 +148,6 @@ def main(file_path: str = "", is_test: bool = False):
     """
     aes = AESCipher()
 
-    app_path_filepath = os.path.join(DIR_PATH, "db", "app_path.dll")
-    app_path_dict = load_json(app_path_filepath)
     enc_mapping_filepath = os.path.join(DIR_PATH, "db", "enc_mapping.dll")
     raw_data, pw = load_encrypted_data(enc_mapping_filepath, aes, prompt="PASSWORD? : ")
     data = json.loads(raw_data.replace("'", '"'))
@@ -160,7 +157,7 @@ def main(file_path: str = "", is_test: bool = False):
     MAPPING_DB.mapping_dict = data['mapping_table']
     MAPPING_DB.hash_table = data['hash_table']
 
-    ext_icon_dict = preprocessing(app_path_dict)
+    ext_icon_dict = preprocessing()
 
     if is_test:
         target_path = os.path.join(DIR_PATH, "testbed")
@@ -170,9 +167,9 @@ def main(file_path: str = "", is_test: bool = False):
         target_list = []
         for file in os.listdir(target_path):
             file_path = os.path.join(target_path, file)
-            target_list.append(make_shortcut(file_path, app_path_dict, ext_icon_dict))
+            target_list.append(make_shortcut(file_path, ext_icon_dict))
     else:
-        target_list = [make_shortcut(file_path, app_path_dict, ext_icon_dict)]
+        target_list = [make_shortcut(file_path, ext_icon_dict)]
 
     data['mapping_table'] = MAPPING_DB.mapping_dict
     data['hash_table'] = MAPPING_DB.hash_table

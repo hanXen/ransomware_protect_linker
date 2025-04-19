@@ -12,10 +12,10 @@ import json
 import random
 import string
 import hashlib
-from typing import Dict, Any
+from typing import Any
 
 
-def ext2app(ext: str, app_path_dict: Dict[str, Dict[str, Any]]) -> str:
+def ext2app(ext: str, app_path_db: dict[str, dict[str, Any]]) -> str:
     """
     Maps a file extension to the corresponding application path.
 
@@ -28,7 +28,7 @@ def ext2app(ext: str, app_path_dict: Dict[str, Dict[str, Any]]) -> str:
         str: The path to the application associated with the given extension, 
              or an empty string if not found.
     """
-    for info in app_path_dict.values():
+    for info in app_path_db.values():
         if ext in info.get("ext", []):
             return info.get("path", "")
     return ""
@@ -49,7 +49,7 @@ def hash_name(name: str) -> str:
     return sha.hexdigest()
 
 
-def name_gen(hidden_ext_list: list, length: int = 8) -> str:
+def name_gen(hidden_ext_list: list[str], length: int = 8) -> str:
     """
     Generates a random file name with a random extension from the provided list.
 
@@ -65,7 +65,7 @@ def name_gen(hidden_ext_list: list, length: int = 8) -> str:
     return f"{name}.{ext}"
 
 
-def postprocessing(data_dict: dict, aes, pw: str, db_filepath: str) -> None:
+def postprocessing(data_dict: dict[str, Any], aes, pw: str, db_filepath: str) -> None:
     """
     Encrypts and writes a dictionary to a specified file path.
 

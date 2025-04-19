@@ -19,14 +19,14 @@ from modules.utils import get_dir_path, load_encrypted_data
 from modules.linker_utils import hash_name, postprocessing
 
 
-def recovery(hidden_file: str, mapping_dict: dict, hash_table: dict) -> None:
+def recovery(hidden_file: str, mapping_dict: dict[str, str], hash_table: dict[str, str]) -> None:
     """
     Recovers a hidden file to its original location and removes its associated shortcut.
 
     Args:
         hidden_file (str): Path to the hidden file.
-        mapping_dict (Dict[str, str]): Mapping of hidden file paths to their original file paths.
-        hash_table (Dict[str, str]): Mapping of hashed names to hidden file paths.
+        mapping_dict (dict): Mapping of hidden file paths to their original file paths.
+        hash_table (dict): Mapping of hashed names to hidden file paths.
     """
     try:
         original_file = mapping_dict[hidden_file]
