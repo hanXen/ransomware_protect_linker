@@ -175,6 +175,10 @@ def main(file_path: str = "", is_test: bool = False) -> None:
             target_list.append(make_shortcut(file_path, ext_icon_dict, hidden_dir_key="help")) 
     else:
         target_list = [make_shortcut(file_path, ext_icon_dict)]
+        
+    target_list = [item for item in target_list if item is not None]
+    if len(target_list) == 0:
+        return
 
     data["mapping_table"] = MAPPING_DB.mapping_dict
     data["hash_table"] = MAPPING_DB.hash_table
