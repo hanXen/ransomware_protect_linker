@@ -4,7 +4,12 @@ echo "`n---------------------------------`n"
 
 
 echo "[*] Initializing databases.`n"
-uv run init_db.py
+$output = uv run init_db.py
+if ($output -eq "[-] PASSWORD ERROR") {
+    Write-Host "[-] Passwords do not match!"
+    Write-Host "[!] Installation Failed!!!"
+    exit 1
+}
 echo "`n---------------------------------`n"
 
 

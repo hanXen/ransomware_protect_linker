@@ -96,7 +96,6 @@ def get_verified_password(confirm: bool = False) -> str:
         pw2 = getpass.getpass("Confirm PASSWORD : ")
         if not pw or pw != pw2:
             print("[-] PASSWORD ERROR")
-            sys.exit(1)
     else:
         pw = getpass.getpass("PASSWORD? : ")
     return pw
@@ -119,7 +118,12 @@ def load_encrypted_data(filepath: str, aes: AESCipher, prompt: str = "PASSWORD? 
     """
     data = read_file(filepath)
     while True:
-        pw = getpass.getpass(prompt)
+        try:
+            pw = getpass.getpass(prompt)
+        except (KeyboardInterrupt,EOFError):
+            print("\n[!] Keyboard Interrupt")
+            sys.exit(1)
+            
         try:
             dec_data = aes.decrypt(data, pw)
             if "hidden_ext" in dec_data or "mapping_table" in dec_data:
