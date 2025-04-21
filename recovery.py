@@ -8,15 +8,14 @@ Usage:
     python recovery.py --all                      # Recover all hidden files
 """
 
-
 import os
 import sys
 import json
 import argparse
 
 from modules.aes import AESCipher
-from modules.utils import get_dir_path, load_encrypted_data
-from modules.linker_utils import hash_name, postprocessing
+from modules.common_utils import get_dir_path
+from modules.security_utils import hash_name, postprocessing, load_encrypted_data
 
 
 def recovery(hidden_file: str, mapping_dict: dict[str, str], hash_table: dict[str, str]) -> None:
@@ -43,7 +42,7 @@ def recovery(hidden_file: str, mapping_dict: dict[str, str], hash_table: dict[st
         print(f"[-] Failed to recover {hidden_file}: {e}")
 
 
-def main(hashed_name: str = "", recover_all: bool = False):
+def main(hashed_name: str = "", recover_all: bool = False) -> None:
     """
     Main function to recover hidden files based on their hash or recover all hidden files.
 

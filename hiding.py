@@ -9,7 +9,6 @@ Usage:
     python hiding.py --testbed                # Hides all files in the testbed folder
 """
 
-
 import os
 import sys
 import json
@@ -20,8 +19,8 @@ from dataclasses import dataclass
 import win32com.client
 
 from modules.aes import AESCipher
-from modules.utils import get_dir_path, load_json, load_encrypted_data
-from modules.linker_utils import ext2app, hash_name, name_gen, postprocessing
+from modules.common_utils import get_dir_path, load_json, ext_to_app_path
+from modules.security_utils import hash_name, name_gen, load_encrypted_data, postprocessing
 
 
 @dataclass
@@ -87,7 +86,7 @@ def make_shortcut(file_path: str, ext_icon_dict: dict[str, str], hidden_dir_key:
     if ext not in ext_icon_dict:
         print(f"[-] Failed to hide {file_path}. Extension {ext} is not supported.")
         return None
-    app_path = ext2app(ext, APP_PATH_DB)
+    app_path = ext_to_app_path(ext, APP_PATH_DB)
     if not app_path:
         print(f"[-] Failed to hide {file_path}. No application path found for the extension: {ext}.")
         return None

@@ -7,15 +7,14 @@ Usage:
     python linker.py --hash <hashed_filename>
 """
 
-
 import sys
 import json
 import argparse
 import subprocess
 
 from modules.aes import AESCipher
-from modules.utils import get_dir_path, load_json, load_encrypted_data
-from modules.linker_utils import ext2app
+from modules.common_utils import get_dir_path, load_json, ext_to_app_path
+from modules.security_utils import load_encrypted_data
 
 
 def main(hashed_name: str) -> None:
@@ -54,7 +53,7 @@ def main(hashed_name: str) -> None:
 
     file_name = mapping_dict[hidden_name]
     ext = file_name.split(".")[-1]
-    app = ext2app(ext, app_path_dict)
+    app = ext_to_app_path(ext, app_path_dict)
     if not app:
         print("[-] No application mapped for the file extension.")
         sys.exit(1)

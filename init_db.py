@@ -1,8 +1,8 @@
 """ Initializing database. """
 
-
 from modules.aes import AESCipher
-from modules.utils import get_dir_path, get_verified_password, read_file, write_file
+from modules.common_utils import get_dir_path, read_file, write_file
+from modules.security_utils import get_verified_password
 
 
 def main() -> None:

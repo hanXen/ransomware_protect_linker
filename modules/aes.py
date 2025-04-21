@@ -1,9 +1,9 @@
 """ AES Cipher """
 
-
 from hashlib import sha256
-from Crypto.Cipher import AES
+
 from Crypto import Random
+from Crypto.Cipher import AES
 
 
 class AESCipher:
