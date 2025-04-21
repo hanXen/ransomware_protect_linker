@@ -99,8 +99,22 @@ To solve usability challenges, we use Windows shortcut files (a.k.a. link files)
     recovery.exe --all
     ```
 
-- Remove file hiding and recovery options from the Windows context menu
+- Remove file hiding and recovery options from the Windows context menu (**Run as Administrator**)
 
     ```powershell
-    Remove-RightClick.bat (Run as Administrator)
+    Remove-RightClick.bat
     ```
+
+---
+
+## License
+
+This project is licensed under the **Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License (CC BY-NC-SA 4.0)**.
+
+### Key Points:
+- This source code may be used for **academic, educational, and research purposes only**.
+- You are free to **share** and **adapt** this project for **non-commercial purposes**.
+- If you modify or build upon this project, you must share your contributions under the **same license** (CC BY-NC-SA 4.0).
+- You must give appropriate **credit** to the original work.
+
+For more details, please see the [LICENSE](./LICENSE) file or visit the [official license page](https://creativecommons.org/licenses/by-nc-sa/4.0/).
