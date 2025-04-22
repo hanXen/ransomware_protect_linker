@@ -12,5 +12,5 @@ wheels/
 # Ignore uv.lock
 uv.lock
 
-/db/app_path.dll
-/db/enc_mapping.dll
+# Generated database files
+/db/*.dll
