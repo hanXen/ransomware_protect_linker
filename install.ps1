@@ -18,12 +18,12 @@ echo "`n---------------------------------`n"
 echo "[*] Building executables.`n"
 
 if (Test-Path "dist") {
-    Remove-Item -Recurse -Force dist        # Clean build
+    Remove-Item -Recurse -Force dist
 }
 
-uv run pyinstaller -F linker.py --uac-admin --manifest admin.manifest
 uv run pyinstaller -F hiding.py
 uv run pyinstaller -F recovery.py
+uv run pyinstaller -F linker.py --uac-admin --manifest admin.manifest
 echo "`n---------------------------------`n"
 
 
