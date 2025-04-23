@@ -8,7 +8,12 @@ echo "`n---------------------------------`n"
 echo "[*] Initializing databases.`n"
 $output = uv run init_db.py
 if ($output -eq "[-] PASSWORD ERROR") {
-    Write-Host "[-] Passwords do not match!"
+    Write-Host "`n[-] Passwords doesn't match or are empty!"
+    Write-Host "[!] Installation Failed!!!"
+    exit 1
+}
+elseif ($output -eq "[!] Keyboard Interrupt") {
+    Write-Host "`n`n[-] Keyboard Interrupt!"
     Write-Host "[!] Installation Failed!!!"
     exit 1
 }
@@ -21,7 +26,7 @@ if (Test-Path "dist") {
     Remove-Item -Recurse -Force dist
 }
 
-uv run pyinstaller -F hiding.py
+uv run pyinstaller -F hiding.py --uac-admin --manifest admin.manifest
 uv run pyinstaller -F recovery.py
 uv run pyinstaller -F linker.py --uac-admin --manifest admin.manifest
 echo "`n---------------------------------`n"

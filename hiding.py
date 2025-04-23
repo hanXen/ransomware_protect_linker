@@ -191,7 +191,11 @@ if __name__ == "__main__":
     parser.add_argument("--testbed", action="store_true", help="Hide all files in testbed folder")
     args = parser.parse_args()
 
-    if not (args.file_path or args.testbed):
-        raise ValueError("[-] Usage: hiding.py --file_path OR --testbed <file_path>")
+    try:
+        if not (args.file_path or args.testbed):
+            raise ValueError("[-] Usage: hiding.py --file_path OR --testbed <file_path>")
+    except ValueError as e:
+        print(e)
+        sys.exit(1)
 
     main(args.file_path, args.testbed)

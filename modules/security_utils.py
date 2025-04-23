@@ -64,15 +64,19 @@ def get_verified_password(confirm: bool = False) -> str:
     Raises:
         SystemExit: If passwords do not match or are empty.
     """
-    if confirm:
-        pw = getpass.getpass("Enter PASSWORD : ")
-        pw2 = getpass.getpass("Confirm PASSWORD : ")
-        if not pw or pw != pw2:
-            print("[-] PASSWORD ERROR")
-            sys.exit(1)
-    else:
-        pw = getpass.getpass("PASSWORD? : ")
-    return pw
+    try:
+        if confirm:
+            pw = getpass.getpass("Enter PASSWORD : ")
+            pw2 = getpass.getpass("Confirm PASSWORD : ")
+            if not pw or pw != pw2:
+                print("[-] PASSWORD ERROR")
+                sys.exit(1)
+        else:
+            pw = getpass.getpass("PASSWORD? : ")
+        return pw
+    except (KeyboardInterrupt, EOFError):
+        print("\n[!] Keyboard Interrupt")
+        sys.exit(1)
 
 
 def load_encrypted_data(filepath: str, aes: AESCipher, prompt: str = "PASSWORD? : ") -> tuple[str, str]:
