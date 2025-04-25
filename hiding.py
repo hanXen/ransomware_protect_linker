@@ -16,7 +16,7 @@ import random
 import argparse
 from dataclasses import dataclass
 
-import win32com.client
+from pylnk3 import for_file
 
 from modules.aes import AESCipher
 from modules.common_utils import get_dir_path, load_json, ext_to_app_path
@@ -101,19 +101,21 @@ def make_shortcut(file_path: str, ext_icon_dict: dict[str, str], hidden_dir_key:
 
     try:
         os.rename(file_path, hidden_file_path)
-        shell = win32com.client.Dispatch("WScript.Shell")
-        shortcut = shell.CreateShortcut(shortcut_path)
-
+        
         # python script (for test)
-        shortcut.Targetpath = "python"
-        shortcut.Arguments = f"\"{DIR_PATH}\\linker.py\" --hash {hashed_name}"
+        target_path = sys.executable
+        arguments = f"\"{DIR_PATH}\\linker.py\" --hash {hashed_name}"
         # executable (for release)
         if getattr(sys, "frozen", False):
-            shortcut.Targetpath = os.path.join(DIR_PATH, "dist", "linker.exe")
-            shortcut.Arguments = f"--hash {hashed_name}"
+            target_path = os.path.join(DIR_PATH, "dist", "linker.exe")
+            arguments = f"--hash {hashed_name}"
 
-        shortcut.IconLocation = ext_icon_dict.get(ext, "")
-        shortcut.Save()
+        for_file(
+            lnk_name=shortcut_path,
+            target_file=target_path,
+            arguments=arguments,
+            icon_file=ext_icon_dict.get(ext, ""),
+        )
 
         MAPPING_DB.mapping_dict[hidden_file_path] = file_path
         MAPPING_DB.hash_table[hashed_name] = hidden_file_path
@@ -123,6 +125,8 @@ def make_shortcut(file_path: str, ext_icon_dict: dict[str, str], hidden_dir_key:
 
     except (ValueError, OSError) as e:
         print(f"[-] Failed to hide {file_path}: {e}")
+        if os.path.exists(hidden_file_path):
+            os.rename(hidden_file_path, file_path)
         return None
 
 
