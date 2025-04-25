@@ -8,7 +8,12 @@ echo "`n---------------------------------`n"
 echo "[*] Initializing databases.`n"
 $output = uv run init_db.py
 if ($output -eq "[-] PASSWORD ERROR") {
-    Write-Host "[-] Passwords do not match!"
+    Write-Host "`n[-] Passwords do not match or are empty!"
+    Write-Host "[!] Installation Failed!!!"
+    exit 1
+}
+elseif ($output -eq "[!] Keyboard Interrupt") {
+    Write-Host "`n`n[-] Keyboard Interrupt!"
     Write-Host "[!] Installation Failed!!!"
     exit 1
 }
@@ -31,4 +36,5 @@ echo "[*] Removing unnecessary files.`n"
 rm *.spec
 rm -r build/
 echo "`n---------------------------------`n"
+
 Write-Host "[+] Installation completed successfully."

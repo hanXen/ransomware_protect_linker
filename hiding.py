@@ -77,7 +77,8 @@ def make_shortcut(file_path: str, ext_icon_dict: dict[str, str], hidden_dir_key:
     Args:
         file_path (str): The path of the file to be hidden.
         ext_icon_dict (dict): Extension-to-icon mapping.
-        hidden_dir_key (str): The key of the directory for hidden files. If not provided, a random key is chosen.
+        hidden_dir_key (str): The key of the directory for hidden files.
+                              If not provided, a random key is chosen.
 
     Returns:
         Optional[str]: The path of the hidden file, or None if hiding failed.
@@ -88,7 +89,7 @@ def make_shortcut(file_path: str, ext_icon_dict: dict[str, str], hidden_dir_key:
         return None
     app_path = ext_to_app_path(ext, APP_PATH_DB)
     if not app_path:
-        print(f"[-] Failed to hide {file_path}. No application path found for the extension: {ext}.")
+        print(f"[-] Failed to hide {file_path}. No application found for the extension: {ext}.")
         return None
 
     new_name = name_gen(MAPPING_DB.hidden_ext_list)
@@ -120,7 +121,7 @@ def make_shortcut(file_path: str, ext_icon_dict: dict[str, str], hidden_dir_key:
         print(f"[+] Hiding success: {file_path} -> {hidden_file_path}")
         return hidden_file_path
 
-    except Exception as e:
+    except (ValueError, OSError) as e:
         print(f"[-] Failed to hide {file_path}: {e}")
         return None
 
@@ -174,7 +175,7 @@ def main(file_path: str = "", is_test: bool = False) -> None:
             target_list.append(make_shortcut(file_path, ext_icon_dict, hidden_dir_key="help")) 
     else:
         target_list = [make_shortcut(file_path, ext_icon_dict)]
-        
+
     target_list = [item for item in target_list if item is not None]
     if len(target_list) == 0:
         return
@@ -192,6 +193,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if not (args.file_path or args.testbed):
-        raise ValueError("[-] Usage: hiding.py --file_path OR --testbed <file_path>")
+        print("[-] No arguments provided.")
+        print("[*] Usage: hiding.py --file_path OR --testbed <file_path>")
+        sys.exit(1)
 
     main(args.file_path, args.testbed)

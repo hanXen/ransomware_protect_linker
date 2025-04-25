@@ -49,7 +49,7 @@ def name_gen(hidden_ext_list: list[str], length: int = 8) -> str:
     name = "".join(random.choice(string.ascii_letters + string.digits) for _ in range(length))
     ext = random.choice(hidden_ext_list)
     return f"{name}.{ext}"
-        
+
 
 def get_verified_password(confirm: bool = False) -> str:
     """
@@ -64,18 +64,23 @@ def get_verified_password(confirm: bool = False) -> str:
     Raises:
         SystemExit: If passwords do not match or are empty.
     """
-    if confirm:
-        pw = getpass.getpass("Enter PASSWORD : ")
-        pw2 = getpass.getpass("Confirm PASSWORD : ")
-        if not pw or pw != pw2:
-            print("[-] PASSWORD ERROR")
-            sys.exit(1)
-    else:
-        pw = getpass.getpass("PASSWORD? : ")
-    return pw
+    try:
+        if confirm:
+            pw = getpass.getpass("Enter PASSWORD : ")
+            pw2 = getpass.getpass("Confirm PASSWORD : ")
+            if not pw or pw != pw2:
+                print("[-] PASSWORD ERROR")
+                sys.exit(1)
+        else:
+            pw = getpass.getpass("PASSWORD? : ")
+        return pw
+    except (KeyboardInterrupt, EOFError):
+        print("\n[!] Keyboard Interrupt")
+        sys.exit(1)
 
 
-def load_encrypted_data(filepath: str, aes: AESCipher, prompt: str = "PASSWORD? : ") -> tuple[str, str]:
+def load_encrypted_data(filepath: str, aes: AESCipher,
+                        prompt: str = "PASSWORD? : ") -> tuple[str, str]:
     """
     Loads and decrypts encrypted data from a file using a password.
 
@@ -101,7 +106,7 @@ def load_encrypted_data(filepath: str, aes: AESCipher, prompt: str = "PASSWORD? 
             dec_data = aes.decrypt(data, pw)
             if "hidden_ext" in dec_data or "mapping_table" in dec_data:
                 return dec_data, pw
-        except Exception:
+        except UnicodeDecodeError:
             print("[-] PASSWORD Fail :(")
 
 
