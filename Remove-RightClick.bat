@@ -6,5 +6,6 @@ echo.
 
 reg delete "HKEY_CLASSES_ROOT\*\shell\Hide File" /f
 reg delete "HKEY_CLASSES_ROOT\Lnkfile\shell\Recover File" /f
+reg delete "HKEY_CLASSES_ROOT\Directory\Background\shell\Recover All" /f
 
 pause
