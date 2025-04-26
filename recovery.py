@@ -112,7 +112,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     if args.hash:
-        print(f"[+] Recovering file with hash: {args.hash}\m")
+        print(f"[+] Recovering file with hash: {args.hash}\n")
 
     elif args.link_file_path:
         if not (os.path.isfile(args.link_file_path)
@@ -122,8 +122,8 @@ if __name__ == "__main__":
 
         try:
             lnk = pylnk3.parse(args.link_file_path)
-            if lnk.arguments and lnk.arguments.startswith("--hash"):
-                args.hash = lnk.arguments.split()[1]
+            if lnk.arguments and lnk.arguments.split()[-2].startswith("--hash"):
+                args.hash = lnk.arguments.split()[-1]
             else:
                 raise ValueError("Invalid or missing hash in shortcut.")
 
