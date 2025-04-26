@@ -41,7 +41,7 @@ class MappingDB:
 
 
 DIR_PATH = get_dir_path()
-MAPPING_DB = MappingDB(list(), dict(), dict(), dict())
+MAPPING_DB = MappingDB([], {}, {}, {})
 APP_PATH_DB = load_json(os.path.join(DIR_PATH, "db", "app_path.dll"))
 
 
@@ -70,7 +70,8 @@ def preprocessing() -> dict[str, str]:
     return ext_icon_dict
 
 
-def make_shortcut(file_path: str, ext_icon_dict: dict[str, str], hidden_dir_key: str = "") -> str | None:
+def make_shortcut(file_path: str, ext_icon_dict: dict[str, str],
+                  hidden_dir_key: str = "") -> str | None:
     """
     Hides a file by creating a shortcut to it.
 
@@ -101,15 +102,16 @@ def make_shortcut(file_path: str, ext_icon_dict: dict[str, str], hidden_dir_key:
 
     try:
         os.rename(file_path, hidden_file_path)
-        
+
         # python script (for test)
         target_path = sys.executable
-        arguments = f"\"{DIR_PATH}\\linker.py\" --hash {hashed_name}"
+        arguments = f"\"{os.path.join(DIR_PATH, 'linker.py')}\" --hash {hashed_name}"
         # executable (for release)
         if getattr(sys, "frozen", False):
             target_path = os.path.join(DIR_PATH, "dist", "linker.exe")
             arguments = f"--hash {hashed_name}"
 
+        # Create a shortcut (.lnk) file using pylnk3 library
         for_file(
             lnk_name=shortcut_path,
             target_file=target_path,
@@ -176,7 +178,7 @@ def main(file_path: str = "", is_test: bool = False) -> None:
         for file in os.listdir(target_path):
             file_path = os.path.join(target_path, file)
             # "help" is hardcoded as the hidden_dir_key for testing purposes
-            target_list.append(make_shortcut(file_path, ext_icon_dict, hidden_dir_key="help")) 
+            target_list.append(make_shortcut(file_path, ext_icon_dict, hidden_dir_key="help"))
     else:
         target_list = [make_shortcut(file_path, ext_icon_dict)]
 
