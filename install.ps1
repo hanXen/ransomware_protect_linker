@@ -27,7 +27,7 @@ if (Test-Path "dist") {
 }
 
 uv run pyinstaller -F hiding.py --uac-admin --manifest admin.manifest
-uv run pyinstaller -F recovery.py
+uv run pyinstaller -F recovery.py --uac-admin --manifest admin.manifest
 uv run pyinstaller -F linker.py --uac-admin --manifest admin.manifest
 echo "`n---------------------------------`n"
 
