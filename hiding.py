@@ -93,10 +93,13 @@ def make_shortcut(file_path: str, ext_icon_dict: dict[str, str],
         print(f"[-] Failed to hide {file_path}. No application found for the extension: {ext}.")
         return None
 
-    new_name = name_gen(MAPPING_DB.hidden_ext_list)
     if not hidden_dir_key:
         hidden_dir_key = random.choice(list(MAPPING_DB.hidden_dir_dict.keys()))
-    hidden_file_path = os.path.join(MAPPING_DB.hidden_dir_dict.get(hidden_dir_key), new_name)
+    while True:
+        new_name = name_gen(MAPPING_DB.hidden_ext_list)
+        hidden_file_path = os.path.join(MAPPING_DB.hidden_dir_dict.get(hidden_dir_key), new_name)
+        if not os.path.exists(hidden_file_path):
+            break    
     shortcut_path = f"{file_path}.lnk"
     hashed_name = hash_name(hidden_file_path)
 

@@ -40,8 +40,14 @@ def recovery(hidden_file: str, mapping_dict: dict[str, str],
         if not original_file:
             raise ValueError(f"No mapping found for {hidden_file}.")
 
+        original_name, original_ext = os.path.splitext(original_file)
+        count = 1
+        while os.path.exists(original_file):
+            original_file = f"{original_name}({count}){original_ext}"
+            count += 1
+
         os.rename(hidden_file, original_file)
-        shortcut_path = f"{original_file}.lnk"
+        shortcut_path = f"{original_name}{original_ext}.lnk"
         if os.path.exists(shortcut_path):
             os.remove(shortcut_path)
 
