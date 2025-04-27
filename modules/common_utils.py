@@ -13,6 +13,8 @@ import os
 import sys
 import json
 
+from filelock import FileLock
+
 
 def get_dir_path() -> str:
     """
@@ -40,8 +42,10 @@ def read_file(filepath: str) -> str:
     Returns:
         str: The content of the file.
     """
-    with open(filepath, "r", encoding="utf-8") as f:
-        return f.read()
+    lock = FileLock(f"{filepath}.lock")
+    with lock:
+        with open(filepath, "r", encoding="utf-8") as f:
+            return f.read()
 
 
 def write_file(filepath: str, data: str) -> None:
@@ -55,8 +59,10 @@ def write_file(filepath: str, data: str) -> None:
     Returns:
         None
     """
-    with open(filepath, "w", encoding="utf-8") as f:
-        f.write(data)
+    lock = FileLock(f"{filepath}.lock")
+    with lock:
+        with open(filepath, "w", encoding="utf-8") as f:
+            f.write(data)
 
 
 def load_json(filepath: str) -> dict[str, list | dict | str]:
@@ -69,8 +75,10 @@ def load_json(filepath: str) -> dict[str, list | dict | str]:
     Returns:
         dict: The parsed JSON data.
     """
-    with open(filepath, "r", encoding="utf-8") as f:
-        return json.load(f)
+    lock = FileLock(f"{filepath}.lock")
+    with lock:
+        with open(filepath, "r", encoding="utf-8") as f:
+            return json.load(f)
 
 
 def ext_to_app_path(ext: str, app_path_db: dict[str, dict[str, list | str]]) -> str:

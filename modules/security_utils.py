@@ -17,7 +17,7 @@ import hashlib
 import getpass
 
 from modules.aes import AESCipher
-from modules.common_utils import read_file
+from modules.common_utils import read_file, write_file
 
 
 def hash_name(name: str) -> str:
@@ -124,5 +124,4 @@ def postprocessing(data_dict: dict[str, str | list], aes, pw: str, db_filepath: 
         None
     """
     enc_data = aes.encrypt(json.dumps(data_dict), pw)
-    with open(db_filepath, "w", encoding="utf-8") as f:
-        f.write(enc_data)
+    write_file(db_filepath, enc_data)
