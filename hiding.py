@@ -117,12 +117,7 @@ def make_shortcut(file_path: str, ext_icon_dict: dict[str, str],
     hashed_name = hash_name(hidden_file_path)
 
     try:
-        same_drive = True if os.path.splitdrive(file_path)[0] == os.path.splitdrive(hidden_file_path)[0] else False
-        if same_drive:
-            os.rename(file_path, hidden_file_path)
-        else:
-            shutil.copy2(file_path, hidden_file_path)
-            os.remove(file_path)
+        shutil.move(file_path, hidden_file_path)
 
         # executable (for release)
         if getattr(sys, "frozen", False):
@@ -150,11 +145,7 @@ def make_shortcut(file_path: str, ext_icon_dict: dict[str, str],
     except (ValueError, OSError) as e:
         print(f"[-] Failed to hide {file_path}: {e}")
         if os.path.exists(hidden_file_path):
-            if same_drive:
-                os.rename(hidden_file_path, file_path)
-            else:
-                shutil.copy2(hidden_file_path, file_path)
-                os.remove(hidden_file_path)
+            shutil.move(hidden_file_path, file_path)
         return None
 
 

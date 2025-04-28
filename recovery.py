@@ -47,12 +47,7 @@ def recovery(hidden_file: str, mapping_dict: dict[str, str],
             original_file = f"{original_name}({count}){original_ext}"
             count += 1
 
-        same_drive = True if os.path.splitdrive(hidden_file)[0] == os.path.splitdrive(original_file)[0] else False
-        if same_drive:
-            os.rename(hidden_file, original_file)
-        else:
-            shutil.copy2(hidden_file, original_file)
-            os.remove(hidden_file)
+        shutil.move(hidden_file, original_file)
 
         shortcut_path = f"{original_name}{original_ext}.lnk"
         if os.path.exists(shortcut_path):
