@@ -14,12 +14,89 @@ import sys
 import json
 import shutil
 import argparse
+import subprocess
 
 import pylnk3
 
 from modules.aes import AESCipher
 from modules.common_utils import get_dir_path
 from modules.security_utils import hash_name, postprocessing, load_encrypted_data
+
+
+def process_link_file(link_file_path: str) -> str:
+    """
+    Processes a .lnk shortcut file to extract the hashed name.
+
+    Args:
+        link_file_path (str): Path of the shortcut file.
+
+    Returns:
+        str: Extracted hashed name from the shortcut file.
+
+    Raises:
+        ValueError: If the shortcut file is invalid or missing a hash.
+        pylnk3.FormatException: If the shortcut file format is invalid.
+    """
+    try:
+        lnk = pylnk3.parse(link_file_path)
+        if lnk.arguments and lnk.arguments.split()[-2].startswith("--hash"):
+            return lnk.arguments.split()[-1]
+        else:
+            raise ValueError("Invalid or missing hash in shortcut.")
+    except (OSError, ValueError, pylnk3.FormatException) as e:
+        print(f"[!] Error processing shortcut: {e}")
+        print(f"Error File path: {link_file_path}")
+
+
+def find_lnks_with_hash():
+    """
+    Searches for .lnk files with '--hash' in their target arguments across drives.
+
+    Returns:
+        list: Paths to matching .lnk files, or None if none are found.
+    Raises:
+        Exception: For unexpected errors.
+    Notes:
+        - Excludes "AppData" from the home directory search.
+        - Dynamically scans drives D: to Z: and the user's home directory.
+        - Uses PowerShell for efficient file discovery.
+    """
+    print("[*] Searching for all link files to recover....\n")
+    try:
+        user_home_dir = os.path.expanduser("~")
+        appdata_path = os.path.join(user_home_dir, "AppData")
+        drives = [f"{drive}:\\" for drive in "DEFGHIJKLMNOPQRSTUVWXYZ" if os.path.exists(f"{drive}:\\")]
+        drives.insert(0,user_home_dir) if os.path.exists(user_home_dir) else None
+        found_links = []
+
+        for drive in drives:
+            exclude_clause = ""
+            if drive == user_home_dir:
+                exclude_clause = f"Where-Object {{ $_.FullName -notlike '{appdata_path}*' }} |"
+            powershell_command = f"""
+                $Shell = New-Object -ComObject WScript.Shell
+                Get-ChildItem -Path "{drive}" -Filter "*.lnk" -Recurse -ErrorAction SilentlyContinue |
+                {exclude_clause}
+                ForEach-Object {{
+                    try {{
+                        $Shortcut = $Shell.CreateShortcut($_.FullName)
+                        if ($Shortcut.Arguments -like '*--hash*') {{
+                            Write-Output $_.FullName
+                        }}
+                    }} catch {{ }}
+                }}
+            """
+            result = subprocess.run(['powershell', '-Command', powershell_command], capture_output=True, text=True)
+            if result.stdout:
+                found_links.extend(result.stdout.strip().splitlines())
+
+        if found_links:
+            return found_links
+        else:
+            print("[-] No .lnk files with '--hash' in their target were found.")
+    except Exception as e:
+        print("[!] An error occured: \n", e)
+    return None
 
 
 def recovery(hidden_file: str, mapping_dict: dict[str, str],
@@ -86,10 +163,26 @@ def main(hashed_name: str | None = None, shortcut_file_path: str | None = None,
             print("[-] No hidden files to recover.")
             sys.exit(1)
 
-        hidden_files = list(mapping_dict.keys())
-        for hidden_file in hidden_files:
-            recovery(hidden_file, mapping_dict, hash_table)
+        found_lnk_files = find_lnks_with_hash()
+        if not found_lnk_files:
+            print("\n[*] Recovering all hidden files to the original paths.")
+            hidden_files = list(mapping_dict.keys())
+            for hidden_file in hidden_files:
+                recovery(hidden_file, mapping_dict, hash_table)
+        else:
+            for lnk_file in found_lnk_files:
+                hashed_name = process_link_file(lnk_file)
+                hidden_file = hash_table.get(hashed_name)
+                if not hidden_file:
+                    continue
+                recovery(hidden_file, mapping_dict, hash_table, lnk_file)
+
     else:
+        if shortcut_file_path:
+            hashed_name = process_link_file(shortcut_file_path)
+            if not hashed_name:
+                sys.exit(1)
+
         if hashed_name in hash_table:
             hidden_file = hash_table.get(hashed_name)
             recovery(hidden_file, mapping_dict, hash_table, shortcut_file_path)
@@ -126,17 +219,6 @@ if __name__ == "__main__":
         if not (os.path.isfile(args.link_file_path)
                 and args.link_file_path.lower().endswith(".lnk")):
             print(f"[!] Invalid shortcut file: {args.link_file_path}")
-            sys.exit(1)
-
-        try:
-            lnk = pylnk3.parse(args.link_file_path)
-            if lnk.arguments and lnk.arguments.split()[-2].startswith("--hash"):
-                args.hash = lnk.arguments.split()[-1]
-            else:
-                raise ValueError("Invalid or missing hash in shortcut.")
-
-        except (ValueError, pylnk3.FormatException) as e:
-            print(f"[!] Error processing shortcut: {e}")
             sys.exit(1)
 
         print(f"[+] Recovering file with link file: {args.link_file_path}\n")
