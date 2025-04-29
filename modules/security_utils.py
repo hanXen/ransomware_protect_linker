@@ -95,13 +95,13 @@ def load_encrypted_data(filepath: str, aes: AESCipher,
     Raises:
         None: The function loops until a valid password is provided.
     """
-    data = read_file(filepath)
     while True:
         try:
             pw = getpass.getpass(prompt)
         except (KeyboardInterrupt, EOFError):
             print("\n[!] Keyboard Interrupt")
             sys.exit(1)
+        data = read_file(filepath)
         try:
             dec_data = aes.decrypt(data, pw)
             if "hidden_ext" in dec_data or "mapping_table" in dec_data:
