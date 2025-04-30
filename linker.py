@@ -47,7 +47,12 @@ def main(hashed_name: str) -> None:
     if hashed_name not in hash_table:
         print("[-] Provided file hash name not found.")
         sys.exit(1)
+
     hidden_name = hash_table[hashed_name]
+    if not os.path.exists(hidden_name):
+        print("[-] Hidden file does not exist.")
+        sys.exit(1)
+
     if hidden_name not in mapping_dict:
         print("[-] Mapping for hidden file not found.")
         sys.exit(1)

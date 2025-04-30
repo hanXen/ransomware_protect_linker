@@ -113,8 +113,14 @@ def make_shortcut(file_path: str, ext_icon_dict: dict[str, str],
         print("[-] Exceeded max tries for unique filename.")
         return None
 
-    shortcut_path = f"{file_path}.lnk"
     hashed_name = hash_name(hidden_file_path)
+    shortcut_path = f"{file_path}.lnk"
+
+    file_name, file_ext = os.path.splitext(file_path)
+    count = 1
+    while os.path.exists(shortcut_path):
+        shortcut_path = f"{file_name}({count}){file_ext}.lnk"
+        count += 1
 
     try:
         shutil.move(file_path, hidden_file_path)
