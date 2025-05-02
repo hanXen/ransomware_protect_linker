@@ -2,21 +2,26 @@
 
 echo "[*] Installing environment with uv.`n"
 uv sync
+echo "`n[+] Environment installation successfull.`n"
 echo "`n---------------------------------`n"
 
 
 echo "[*] Initializing databases.`n"
-$output = uv run init_db.py
-if ($output -eq "[-] PASSWORD ERROR") {
-    Write-Host "`n[-] Passwords do not match or are empty!"
-    Write-Host "[!] Installation Failed!!!"
-    exit 1
+$output = uv run init_db.py | ForEach-Object { Write-Host $_; $_ }
+if ($output) {
+    if ($output[-1] -eq "[-] PASSWORD ERROR") {
+        Write-Host "[!] Installation Failed!!!"
+        exit 1
+    }
+    elseif ($output[-1] -eq "[-] Keyboard Interrupt") {
+        Write-Host "[!] Installation Failed!!!"
+        exit 1
+    }
 }
-elseif ($output -eq "[!] Keyboard Interrupt") {
-    Write-Host "`n`n[-] Keyboard Interrupt!"
-    Write-Host "[!] Installation Failed!!!"
-    exit 1
+else {
+    Write-Host "`n[+] Databases initialization successfull."
 }
+
 echo "`n---------------------------------`n"
 
 
@@ -32,9 +37,10 @@ uv run pyinstaller -F linker.py --uac-admin --manifest admin.manifest
 echo "`n---------------------------------`n"
 
 
-echo "[*] Removing unnecessary files.`n"
+echo "[*] Cleaning Up.`n"
 rm *.spec
 rm -r build/
+echo "`n[+] Done`n"
 echo "`n---------------------------------`n"
 
-Write-Host "[+] Installation completed successfully."
+Write-Host "[+] Installation completed successfully.`n"
