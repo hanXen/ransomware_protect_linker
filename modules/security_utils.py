@@ -1,9 +1,14 @@
 """
 Security-related utility functions.
 
+This module provides functions for hashing, generating random file names,
+validating and verifying passwords, encrypting and decrypting data, and
+postprocessing encrypted data.
+
 Functions:
 - hash_name: Generates a SHA-1 hash for a given string.
 - name_gen: Creates unique file names with obfuscated extensions.
+- check_password_requirements: Validates a password against specific requirements.
 - get_verified_password: Prompts the user for a password with optional confirmation.
 - load_encrypted_data: Decrypts and loads data from an encrypted file.
 - postprocessing: Encrypts and writes mapping data to a file.
