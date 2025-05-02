@@ -56,6 +56,36 @@ def name_gen(hidden_ext_list: list[str], length: int = 8) -> str:
     return f"{name}.{ext}"
 
 
+
+def check_password_requirements(pw: str) -> list[str]:
+    """
+    Checks the password against a set of requirements and returns unmet requirements.
+
+    Args:
+        pw (str): The password to check.
+
+    Returns:
+        list[str]: A list of unmet password requirements.
+    """
+    requirements = []
+    if len(pw) < 8:
+        requirements.append("PASSWORD must be at least 8 characters long.")
+    if not any(char.isdigit() for char in pw):
+        requirements.append("PASSWORD must contain at least one digit.")
+    if not any(char.islower() for char in pw):
+        requirements.append("PASSWORD must contain at least one lowercase letter.")
+    if not any(char.isupper() for char in pw):
+        requirements.append("PASSWORD must contain at least one uppercase letter.")
+    if not any(char in string.punctuation for char in pw):
+        requirements.append("PASSWORD must contain at least one special character.")
+    if not all(char.isalnum() or char in string.punctuation for char in pw):
+        requirements.append("PASSWORD must only contain alphanumeric characters and special characters.")
+    if len(pw) > 20:
+        requirements.append("PASSWORD must be at most 20 characters long.")
+    return requirements
+
+
+
 def get_verified_password(confirm: bool = False) -> str:
     """
     Prompts the user for a password, with an optional confirmation step.
