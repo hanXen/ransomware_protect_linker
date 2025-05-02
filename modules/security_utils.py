@@ -56,7 +56,6 @@ def name_gen(hidden_ext_list: list[str], length: int = 8) -> str:
     return f"{name}.{ext}"
 
 
-
 def check_password_requirements(pw: str) -> list[str]:
     """
     Checks the password against a set of requirements and returns unmet requirements.
@@ -85,33 +84,39 @@ def check_password_requirements(pw: str) -> list[str]:
     return requirements
 
 
-
-def get_verified_password(confirm: bool = False) -> str:
+def get_verified_password() -> str:
     """
-    Prompts the user for a password, with an optional confirmation step.
-
-    Args:
-        confirm (bool): If True, requires the user to confirm the password.
+    Prompts the user to enter and confirm a password, validates it against 
+    specific requirements, and returns the verified password.
 
     Returns:
-        str: The verified password.
+        str: The verified password if it meets all requirements.
 
     Raises:
-        SystemExit: If passwords do not match or are empty.
+        SystemExit: If the user interrupts the process or if the password 
+                    validation fails.
     """
     try:
-        if confirm:
-            pw = getpass.getpass("Enter PASSWORD : ")
-            pw2 = getpass.getpass("Confirm PASSWORD : ")
-            if not pw or pw != pw2:
-                print("[-] PASSWORD ERROR")
-                sys.exit(1)
-        else:
-            pw = getpass.getpass("PASSWORD? : ")
+        pw = getpass.getpass("Enter PASSWORD: ")
+        pw2 = getpass.getpass("Confirm PASSWORD: ")
+
+        if not pw or pw != pw2:
+            print("\n[-] PASSWORD mismatch or empty. Please try again.")
+            raise ValueError("\n[-] PASSWORD ERROR")
+
+        requirements = check_password_requirements(pw)
+        if requirements:
+            print("\n[!] PASSWORD does not meet the following requirements:")
+            for req in requirements:
+                print(f"  - {req}")
+            raise ValueError("\n[-] PASSWORD ERROR")
         return pw
+
     except (KeyboardInterrupt, EOFError):
-        print("\n[!] Keyboard Interrupt")
-        sys.exit(1)
+        print("\n\n[-] Keyboard Interrupt")
+    except ValueError as e:
+        print(e)
+    sys.exit(1)
 
 
 def load_encrypted_data(filepath: str, aes: AESCipher,
