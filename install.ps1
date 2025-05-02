@@ -2,6 +2,7 @@
 
 echo "[*] Installing environment with uv.`n"
 uv sync
+echo "`n[+] Environment installation successfull.`n"
 echo "`n---------------------------------`n"
 
 
@@ -32,9 +33,10 @@ uv run pyinstaller -F linker.py --uac-admin --manifest admin.manifest
 echo "`n---------------------------------`n"
 
 
-echo "[*] Removing unnecessary files.`n"
+echo "[*] Cleaning Up.`n"
 rm *.spec
 rm -r build/
+echo "`n[+] Done`n"
 echo "`n---------------------------------`n"
 
-Write-Host "[+] Installation completed successfully."
+Write-Host "[+] Installation completed successfully.`n"
