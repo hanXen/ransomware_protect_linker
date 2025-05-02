@@ -11,6 +11,7 @@ Functions:
 
 import sys
 import json
+import time
 import random
 import string
 import hashlib
@@ -18,6 +19,10 @@ import getpass
 
 from modules.aes import AESCipher
 from modules.common_utils import read_file, write_file
+
+
+MAX_ATTEMPTS = 3
+WAIT_TIME = 1
 
 
 def hash_name(name: str) -> str:
@@ -90,12 +95,13 @@ def load_encrypted_data(filepath: str, aes: AESCipher,
         prompt (str): The prompt to display for password input.
 
     Returns:
-        Tuple[str, str]: The decrypted data and the password used for decryption.
+        Tuple[str, str]: Decrypted data and the password.
 
     Raises:
-        None: The function loops until a valid password is provided.
+        SystemExit: If decryption fails after maximum attempts.
     """
-    while True:
+    attempts = 0
+    while attempts < MAX_ATTEMPTS:
         try:
             pw = getpass.getpass(prompt)
         except (KeyboardInterrupt, EOFError):
@@ -107,7 +113,16 @@ def load_encrypted_data(filepath: str, aes: AESCipher,
             if "hidden_ext" in dec_data or "mapping_table" in dec_data:
                 return dec_data, pw
         except UnicodeDecodeError:
-            print("[-] PASSWORD Fail :(")
+            attempts += 1
+            print(f"\n[-] PASSWORD Fail :(\n{MAX_ATTEMPTS - attempts} attempts remaining\n")
+            if attempts <= MAX_ATTEMPTS:
+                time.sleep(WAIT_TIME)
+        except Exception as e:
+            print(f"[-] Decryption error: {e}")
+            sys.exit(1)
+
+    print(f"Maximum password attempts ({MAX_ATTEMPTS}) exceeded.")
+    sys.exit(1)
 
 
 def postprocessing(data_dict: dict[str, str | list], aes, pw: str, db_filepath: str) -> None:
