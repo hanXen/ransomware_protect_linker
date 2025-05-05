@@ -1,9 +1,14 @@
 """
 Security-related utility functions.
 
+This module provides functions for hashing, generating random file names,
+validating and verifying passwords, encrypting and decrypting data, and
+postprocessing encrypted data.
+
 Functions:
 - hash_name: Generates a SHA-1 hash for a given string.
 - name_gen: Creates unique file names with obfuscated extensions.
+- check_password_requirements: Validates a password against specific requirements.
 - get_verified_password: Prompts the user for a password with optional confirmation.
 - load_encrypted_data: Decrypts and loads data from an encrypted file.
 - postprocessing: Encrypts and writes mapping data to a file.
@@ -11,6 +16,7 @@ Functions:
 
 import sys
 import json
+import time
 import random
 import string
 import hashlib
@@ -18,6 +24,10 @@ import getpass
 
 from modules.aes import AESCipher
 from modules.common_utils import read_file, write_file
+
+
+MAX_ATTEMPTS = 3
+WAIT_TIME = 1
 
 
 def hash_name(name: str) -> str:
@@ -51,32 +61,67 @@ def name_gen(hidden_ext_list: list[str], length: int = 8) -> str:
     return f"{name}.{ext}"
 
 
-def get_verified_password(confirm: bool = False) -> str:
+def check_password_requirements(pw: str) -> list[str]:
     """
-    Prompts the user for a password, with an optional confirmation step.
+    Checks the password against a set of requirements and returns unmet requirements.
 
     Args:
-        confirm (bool): If True, requires the user to confirm the password.
+        pw (str): The password to check.
 
     Returns:
-        str: The verified password.
+        list[str]: A list of unmet password requirements.
+    """
+    requirements = []
+    if len(pw) < 8:
+        requirements.append("PASSWORD must be at least 8 characters long.")
+    if not any(char.isdigit() for char in pw):
+        requirements.append("PASSWORD must contain at least one digit.")
+    if not any(char.islower() for char in pw):
+        requirements.append("PASSWORD must contain at least one lowercase letter.")
+    if not any(char.isupper() for char in pw):
+        requirements.append("PASSWORD must contain at least one uppercase letter.")
+    if not any(char in string.punctuation for char in pw):
+        requirements.append("PASSWORD must contain at least one special character.")
+    if not all(char.isalnum() or char in string.punctuation for char in pw):
+        requirements.append("PASSWORD must only contain alphanumeric characters and special characters.")
+    if len(pw) > 20:
+        requirements.append("PASSWORD must be at most 20 characters long.")
+    return requirements
+
+
+def get_verified_password() -> str:
+    """
+    Prompts the user to enter and confirm a password, validates it against 
+    specific requirements, and returns the verified password.
+
+    Returns:
+        str: The verified password if it meets all requirements.
 
     Raises:
-        SystemExit: If passwords do not match or are empty.
+        SystemExit: If the user interrupts the process or if the password 
+                    validation fails.
     """
     try:
-        if confirm:
-            pw = getpass.getpass("Enter PASSWORD : ")
-            pw2 = getpass.getpass("Confirm PASSWORD : ")
-            if not pw or pw != pw2:
-                print("[-] PASSWORD ERROR")
-                sys.exit(1)
-        else:
-            pw = getpass.getpass("PASSWORD? : ")
+        pw = getpass.getpass("Enter PASSWORD: ")
+        pw2 = getpass.getpass("Confirm PASSWORD: ")
+
+        if not pw or pw != pw2:
+            print("\n[-] PASSWORD mismatch or empty. Please try again.")
+            raise ValueError("\n[-] PASSWORD ERROR")
+
+        requirements = check_password_requirements(pw)
+        if requirements:
+            print("\n[!] PASSWORD does not meet the following requirements:")
+            for req in requirements:
+                print(f"  - {req}")
+            raise ValueError("\n[-] PASSWORD ERROR")
         return pw
+
     except (KeyboardInterrupt, EOFError):
-        print("\n[!] Keyboard Interrupt")
-        sys.exit(1)
+        print("\n\n[-] Keyboard Interrupt")
+    except ValueError as e:
+        print(e)
+    sys.exit(1)
 
 
 def load_encrypted_data(filepath: str, aes: AESCipher,
@@ -90,12 +135,13 @@ def load_encrypted_data(filepath: str, aes: AESCipher,
         prompt (str): The prompt to display for password input.
 
     Returns:
-        Tuple[str, str]: The decrypted data and the password used for decryption.
+        Tuple[str, str]: Decrypted data and the password.
 
     Raises:
-        None: The function loops until a valid password is provided.
+        SystemExit: If decryption fails after maximum attempts.
     """
-    while True:
+    attempts = 0
+    while attempts < MAX_ATTEMPTS:
         try:
             pw = getpass.getpass(prompt)
         except (KeyboardInterrupt, EOFError):
@@ -107,7 +153,16 @@ def load_encrypted_data(filepath: str, aes: AESCipher,
             if "hidden_ext" in dec_data or "mapping_table" in dec_data:
                 return dec_data, pw
         except UnicodeDecodeError:
-            print("[-] PASSWORD Fail :(")
+            attempts += 1
+            print(f"\n[-] PASSWORD Fail :(\n{MAX_ATTEMPTS - attempts} attempts remaining\n")
+            if attempts <= MAX_ATTEMPTS:
+                time.sleep(WAIT_TIME)
+        except Exception as e:
+            print(f"[-] Decryption error: {e}")
+            sys.exit(1)
+
+    print(f"Maximum password attempts ({MAX_ATTEMPTS}) exceeded.")
+    sys.exit(1)
 
 
 def postprocessing(data_dict: dict[str, str | list], aes, pw: str, db_filepath: str) -> None:

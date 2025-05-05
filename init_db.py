@@ -24,8 +24,8 @@ def main() -> None:
     dir_path = get_dir_path()
     aes = AESCipher()
 
+    pw = get_verified_password()
     mapping_data = read_file(os.path.join(dir_path, "db", "mapping.db"))
-    pw = get_verified_password(confirm=True)
 
     enc_mapping = aes.encrypt(mapping_data, pw)
     write_file(os.path.join(dir_path, "db", "enc_mapping.dll"), enc_mapping)
