@@ -13,7 +13,6 @@ import os
 import sys
 import json
 import random
-import shutil
 import argparse
 from dataclasses import dataclass
 
@@ -41,7 +40,6 @@ class MappingDB:
     hash_table: dict
 
 
-MAX_TRIES = 100
 DIR_PATH = get_dir_path()
 MAPPING_DB = MappingDB([], {}, {}, {})
 APP_PATH_DB = load_json(os.path.join(DIR_PATH, "db", "app_path.dll"))
@@ -81,74 +79,37 @@ def make_shortcut(file_path: str, ext_icon_dict: dict[str, str],
         file_path (str): The path of the file to be hidden.
         ext_icon_dict (dict): Extension-to-icon mapping.
         hidden_dir_key (str): The key of the directory for hidden files.
-                              If not provided or invalid, a random key is chosen.
+                              If not provided, a random key is chosen.
 
     Returns:
         Optional[str]: The path of the hidden file, or None if hiding failed.
     """
-
-    find_ext = os.path.basename(file_path).rfind(".")
-    if find_ext == -1:
-        print(f"[-] Failed to hide {file_path} : Missing extension in filename.")
-        return None
-    elif find_ext == 0:
-        print(f"[-] Failed to hide {file_path} : Invalid filename. Please rename it to a valid file name.")
-        return None
-
     ext = file_path.split(".")[-1].lower()
     if ext not in ext_icon_dict:
         print(f"[-] Failed to hide {file_path}. Extension {ext} is not supported.")
         return None
-
     app_path = ext_to_app_path(ext, APP_PATH_DB)
     if not app_path:
         print(f"[-] Failed to hide {file_path}. No application found for the extension: {ext}.")
         return None
 
-    if hidden_dir_key and hidden_dir_key in MAPPING_DB.hidden_dir_dict:
-        hidden_dir = MAPPING_DB.hidden_dir_dict[hidden_dir_key]
-    else:
-        hidden_dir = random.choice(list(MAPPING_DB.hidden_dir_dict.values()))
-    if not os.path.exists(hidden_dir):
-        print(f"[-] Hidden direcory does not exist: {hidden_dir}")
-        return None
-
-    for _ in range(MAX_TRIES):
-        new_name = name_gen(MAPPING_DB.hidden_ext_list)
-        hidden_file_path = os.path.join(hidden_dir, new_name)
-        if not os.path.exists(hidden_file_path):
-            break
-    else:
-        print("[-] Exceeded max tries for unique filename.")
-        return None
-
-    hashed_name = hash_name(hidden_file_path)
+    new_name = name_gen(MAPPING_DB.hidden_ext_list)
+    if not hidden_dir_key:
+        hidden_dir_key = random.choice(list(MAPPING_DB.hidden_dir_dict.keys()))
+    hidden_file_path = os.path.join(MAPPING_DB.hidden_dir_dict.get(hidden_dir_key), new_name)
     shortcut_path = f"{file_path}.lnk"
-
-    file_name, file_ext = os.path.splitext(file_path)
-    count = 1
-    while os.path.exists(shortcut_path):
-        shortcut_path = f"{file_name}({count}){file_ext}.lnk"
-        count += 1
+    hashed_name = hash_name(hidden_file_path)
 
     try:
-        try:
-            os.rename(file_path, hidden_file_path)
-        except PermissionError as e:
-            print(f"[!] Failed to hide {file_path}: {e}")
-            print("[!] Please close the file and try again.")
-            sys.exit(1)
-        except OSError:
-            shutil.move(file_path, hidden_file_path)
+        os.rename(file_path, hidden_file_path)
 
+        # python script (for test)
+        target_path = sys.executable
+        arguments = f"\"{os.path.join(DIR_PATH, 'linker.py')}\" --hash {hashed_name}"
         # executable (for release)
         if getattr(sys, "frozen", False):
             target_path = os.path.join(DIR_PATH, "dist", "linker.exe")
             arguments = f"--hash {hashed_name}"
-        # python script (for test)
-        else:
-            target_path = sys.executable
-            arguments = f"\"{os.path.join(DIR_PATH, 'linker.py')}\" --hash {hashed_name}"
 
         # Create a shortcut (.lnk) file using pylnk3 library
         for_file(
@@ -167,17 +128,7 @@ def make_shortcut(file_path: str, ext_icon_dict: dict[str, str],
     except (ValueError, OSError) as e:
         print(f"[-] Failed to hide {file_path}: {e}")
         if os.path.exists(hidden_file_path):
-            try:
-                os.rename(hidden_file_path, file_path)
-            except PermissionError as e:
-                print(f"[!] {e}")
-                print("[!] Please close the file and try again.")
-                sys.exit(1)
-            except OSError:
-                try:
-                    shutil.move(hidden_file_path, file_path)
-                except OSError as e:
-                    print(e)
+            os.rename(hidden_file_path, file_path)
         return None
 
 

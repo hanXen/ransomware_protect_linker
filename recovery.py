@@ -12,7 +12,6 @@ Usage:
 import os
 import sys
 import json
-import shutil
 import argparse
 
 import pylnk3
@@ -36,34 +35,13 @@ def recovery(hidden_file: str, mapping_dict: dict[str, str],
     try:
         if shortcut_file_path:
             original_file = shortcut_file_path.removesuffix(".lnk")
-            while original_file.strip().endswith(" - Copy"):
-                original_file = original_file.removesuffix(" - Copy")
         else:
             original_file = mapping_dict.get(hidden_file)
-
         if not original_file:
             raise ValueError(f"No mapping found for {hidden_file}.")
 
-        find_ext = os.path.basename(original_file).rfind(".")
-        if find_ext in [0, -1]:
-            raise NameError(f"Invalid filename {original_file} : Please rename it to valid filename.")
-
-        original_name, original_ext = os.path.splitext(original_file)
-        count = 1
-        while os.path.exists(original_file):
-            original_file = f"{original_name}({count}){original_ext}"
-            count += 1
-
-        try:
-            os.rename(hidden_file, original_file)
-        except PermissionError as e:
-            print(f"[!] Failed to hide {hidden_file}: {e}")
-            print("[!] Please close the file and try again.")
-            sys.exit(1)
-        except OSError:
-            shutil.move(hidden_file, original_file)
-
-        shortcut_path = f"{original_name}{original_ext}.lnk"
+        os.rename(hidden_file, original_file)
+        shortcut_path = f"{original_file}.lnk"
         if os.path.exists(shortcut_path):
             os.remove(shortcut_path)
 
@@ -73,8 +51,6 @@ def recovery(hidden_file: str, mapping_dict: dict[str, str],
         print(f"  [+] Recovered: {hidden_file} -> {original_file}")
 
     except (ValueError, OSError) as e:
-        print(f"  [-] Failed to recover {hidden_file}: {e}")
-    except NameError as e:
         print(f"  [-] Failed to recover {hidden_file}: {e}")
 
 

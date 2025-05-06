@@ -30,9 +30,7 @@ To solve usability challenges, we use Windows shortcut files (a.k.a. link files)
 
     - Ensure the application paths specified in `app_path.json` are correct, especially for commercial software like **Microsoft Word**, **Excel**, **PowerPoint**, and **Adobe Acrobat**.
 
-    - To set up our default environment, install **MS Office**, **Adobe Acrobat**, **7-Zip**, and **VLC Media Player** or configure `app_path.json` with your preferred applications.
-
-        - If the application path specified in `app_path.json` does not actually exist, the corresponding extension will not be supported automatically when performing the hiding task.
+    - To set up our default environment, install **MS Office**, **Adobe Acrobat**, and **7-Zip**, or configure `app_path.json` with your preferred applications.
 
     - Alternatively, you can remove any application entries from `app_path.json` if you do not need to support them.
 
