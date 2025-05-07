@@ -89,11 +89,14 @@ def check_password_requirements(pw: str) -> list[str]:
     return requirements
 
 
-def get_verified_password() -> str:
+def get_verified_password(validate_password=False) -> str:
     """
     Prompts the user to enter and confirm a password, validates it against 
     specific requirements, and returns the verified password.
 
+    Args:
+        validate_password (bool): If True, the password will be validated against 
+                        specific requirements.
     Returns:
         str: The verified password if it meets all requirements.
 
@@ -108,13 +111,13 @@ def get_verified_password() -> str:
         if not pw or pw != pw2:
             print("\n[-] PASSWORD mismatch or empty. Please try again.")
             raise ValueError("\n[-] PASSWORD ERROR")
-
-        requirements = check_password_requirements(pw)
-        if requirements:
-            print("\n[!] PASSWORD does not meet the following requirements:")
-            for req in requirements:
-                print(f"  - {req}")
-            raise ValueError("\n[-] PASSWORD ERROR")
+        if validate_password:
+            requirements = check_password_requirements(pw)
+            if requirements:
+                print("\n[!] PASSWORD does not meet the following requirements:")
+                for req in requirements:
+                    print(f"  - {req}")
+                raise ValueError("\n[-] PASSWORD ERROR")
         return pw
 
     except (KeyboardInterrupt, EOFError):
