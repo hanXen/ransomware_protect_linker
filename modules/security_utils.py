@@ -162,7 +162,7 @@ def load_encrypted_data(filepath: str, aes: AESCipher,
             print(f"\n[-] PASSWORD Fail :(\n{MAX_ATTEMPTS - attempts} attempts remaining\n")
             if attempts <= MAX_ATTEMPTS:
                 time.sleep(WAIT_TIME)
-        except Exception as e:
+        except (ValueError, OSError, TypeError) as e:
             print(f"[-] Decryption error: {e}")
             sys.exit(1)
 
