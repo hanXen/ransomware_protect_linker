@@ -27,6 +27,8 @@ from modules.common_utils import read_file, write_file
 
 
 MAX_ATTEMPTS = 3
+MIN_PW_LEN = 8
+MAX_PW_LEN = 20
 WAIT_TIME = 1
 
 
@@ -71,22 +73,22 @@ def check_password_requirements(pw: str) -> list[str]:
     Returns:
         list[str]: A list of unmet password requirements.
     """
-    requirements = []
-    if len(pw) < 8:
-        requirements.append("PASSWORD must be at least 8 characters long.")
+    unmet_pw_reqs = []
+    if len(pw) < MIN_PW_LEN:
+        unmet_pw_reqs.append(f"PASSWORD must be at least {MIN_PW_LEN} characters long.")
     if not any(char.isdigit() for char in pw):
-        requirements.append("PASSWORD must contain at least one digit.")
+        unmet_pw_reqs.append("PASSWORD must contain at least one digit.")
     if not any(char.islower() for char in pw):
-        requirements.append("PASSWORD must contain at least one lowercase letter.")
+        unmet_pw_reqs.append("PASSWORD must contain at least one lowercase letter.")
     if not any(char.isupper() for char in pw):
-        requirements.append("PASSWORD must contain at least one uppercase letter.")
+        unmet_pw_reqs.append("PASSWORD must contain at least one uppercase letter.")
     if not any(char in string.punctuation for char in pw):
-        requirements.append("PASSWORD must contain at least one special character.")
+        unmet_pw_reqs.append("PASSWORD must contain at least one special character.")
     if not all(char.isalnum() or char in string.punctuation for char in pw):
-        requirements.append("PASSWORD must only contain alphanumeric characters and special characters.")
-    if len(pw) > 20:
-        requirements.append("PASSWORD must be at most 20 characters long.")
-    return requirements
+        unmet_pw_reqs.append("PASSWORD must only contain letters, numbers, and special characters.")
+    if len(pw) > MAX_PW_LEN:
+        unmet_pw_reqs.append(f"PASSWORD must be at most {MAX_PW_LEN} characters long.")
+    return unmet_pw_reqs
 
 
 def get_verified_password(validate_password=False) -> str:
@@ -96,7 +98,7 @@ def get_verified_password(validate_password=False) -> str:
 
     Args:
         validate_password (bool): If True, the password will be validated against 
-                        specific requirements.
+                                  specific requirements.
     Returns:
         str: The verified password if it meets all requirements.
 
@@ -112,10 +114,10 @@ def get_verified_password(validate_password=False) -> str:
             print("\n[-] PASSWORD mismatch or empty. Please try again.")
             raise ValueError("\n[-] PASSWORD ERROR")
         if validate_password:
-            requirements = check_password_requirements(pw)
-            if requirements:
+            unmet_pw_reqs = check_password_requirements(pw)
+            if unmet_pw_reqs:
                 print("\n[!] PASSWORD does not meet the following requirements:")
-                for req in requirements:
+                for req in unmet_pw_reqs:
                     print(f"  - {req}")
                 raise ValueError("\n[-] PASSWORD ERROR")
         return pw
