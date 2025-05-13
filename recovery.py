@@ -12,13 +12,12 @@ Usage:
 import os
 import sys
 import json
-import shutil
 import argparse
 
 import pylnk3
 
 from modules.aes import AESCipher
-from modules.common_utils import get_dir_path
+from modules.common_utils import get_dir_path, move_file
 from modules.security_utils import hash_name, postprocessing, load_encrypted_data
 
 
@@ -35,9 +34,7 @@ def recovery(hidden_file: str, mapping_dict: dict[str, str],
     """
     try:
         if shortcut_file_path:
-            original_file = shortcut_file_path.removesuffix(".lnk")
-            while original_file.strip().endswith(" - Copy"):
-                original_file = original_file.removesuffix(" - Copy")
+            original_file = shortcut_file_path.removesuffix(".lnk").strip()
         else:
             original_file = mapping_dict.get(hidden_file)
 
@@ -54,14 +51,9 @@ def recovery(hidden_file: str, mapping_dict: dict[str, str],
             original_file = f"{original_name}({count}){original_ext}"
             count += 1
 
-        try:
-            os.rename(hidden_file, original_file)
-        except PermissionError as e:
-            print(f"[!] Failed to hide {hidden_file}: {e}")
-            print("[!] Please close the file and try again.")
-            sys.exit(1)
-        except OSError:
-            shutil.move(hidden_file, original_file)
+        move_status = move_file(hidden_file, original_file)
+        if not move_status:
+            return None
 
         shortcut_path = f"{original_name}{original_ext}.lnk"
         if os.path.exists(shortcut_path):
