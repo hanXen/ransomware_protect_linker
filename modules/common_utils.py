@@ -7,11 +7,13 @@ Functions:
 - write_file: Writes data to a file.
 - load_json: Loads and parses JSON data from a file.
 - ext_to_app_path: Maps file extensions to their corresponding applications.
+- move_file: Moves a file from one location to another, handling errors and permissions.
 """
 
 import os
 import sys
 import json
+import shutil
 
 from filelock import FileLock
 
@@ -98,3 +100,49 @@ def ext_to_app_path(ext: str, app_path_db: dict[str, dict[str, list | str]]) -> 
         if ext in info.get("ext", []):
             return info.get("path", "")
     return ""
+
+
+def move_file(src_path: str, dest_path: str) -> bool:
+    """
+    Moves a file from the source path to the destination path.
+
+    This function attempts to move a file using `os.rename` for efficiency. 
+    If `os.rename` fails due to a `PermissionError` or other issues, it falls 
+    back to using `shutil.move` to complete the operation.
+
+    Args:
+        src_path (str): The source file path.
+        dest_path (str): The destination file path.
+
+    Returns:
+        bool: True if the file was successfully moved, False otherwise.
+
+    Exceptions:
+        - Handles `PermissionError`:
+            - If the error code is 5 (Access Denied), it suggests checking permissions.
+            - If the file is in use by another process, it advises closing the file.
+        - Handles `OSError`:
+            - Attempts to use `shutil.move` as a fallback if `os.rename` fails.
+
+    Notes:
+        - Ensure the source file exists and the destination path is valid.
+        - Proper permissions are required to move the file.
+    """
+    try:
+        os.rename(src_path, dest_path)
+        return True
+    except PermissionError as e:
+        print(f"\n[!] Failed to hide {src_path}: ",end="")
+        if e.winerror == 5:
+            print(f"Access denied")
+            print("[!] Please ensure you have the necessary permissions.\n")
+        else:
+            print("File is in use by another process.")
+            print("[!] Please close the file and try again.\n")
+    except OSError:
+        try:
+            shutil.move(src_path, dest_path)
+            return True
+        except OSError as e:
+            print(e)
+    return False
