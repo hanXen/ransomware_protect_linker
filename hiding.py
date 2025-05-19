@@ -13,14 +13,13 @@ import os
 import sys
 import json
 import random
-import shutil
 import argparse
 from dataclasses import dataclass
 
 from pylnk3 import for_file
 
 from modules.aes import AESCipher
-from modules.common_utils import get_dir_path, load_json, ext_to_app_path
+from modules.common_utils import get_dir_path, load_json, ext_to_app_path, move_file
 from modules.security_utils import hash_name, name_gen, load_encrypted_data, postprocessing
 
 
@@ -87,14 +86,6 @@ def make_shortcut(file_path: str, ext_icon_dict: dict[str, str],
         Optional[str]: The path of the hidden file, or None if hiding failed.
     """
 
-    find_ext = os.path.basename(file_path).rfind(".")
-    if find_ext == -1:
-        print(f"[-] Failed to hide {file_path} : Missing extension in filename.")
-        return None
-    elif find_ext == 0:
-        print(f"[-] Failed to hide {file_path} : Invalid filename. Please rename it to a valid file name.")
-        return None
-
     ext = file_path.split(".")[-1].lower()
     if ext not in ext_icon_dict:
         print(f"[-] Failed to hide {file_path}. Extension {ext} is not supported.")
@@ -132,14 +123,9 @@ def make_shortcut(file_path: str, ext_icon_dict: dict[str, str],
         count += 1
 
     try:
-        try:
-            os.rename(file_path, hidden_file_path)
-        except PermissionError as e:
-            print(f"[!] Failed to hide {file_path}: {e}")
-            print("[!] Please close the file and try again.")
-            sys.exit(1)
-        except OSError:
-            shutil.move(file_path, hidden_file_path)
+        move_status = move_file(file_path, hidden_file_path)
+        if not move_status:
+            return None
 
         # executable (for release)
         if getattr(sys, "frozen", False):
@@ -167,17 +153,7 @@ def make_shortcut(file_path: str, ext_icon_dict: dict[str, str],
     except (ValueError, OSError) as e:
         print(f"[-] Failed to hide {file_path}: {e}")
         if os.path.exists(hidden_file_path):
-            try:
-                os.rename(hidden_file_path, file_path)
-            except PermissionError as e:
-                print(f"[!] {e}")
-                print("[!] Please close the file and try again.")
-                sys.exit(1)
-            except OSError:
-                try:
-                    shutil.move(hidden_file_path, file_path)
-                except OSError as e:
-                    print(e)
+            move_file(hidden_file_path, file_path)
         return None
 
 
