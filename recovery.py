@@ -34,7 +34,7 @@ def recovery(hidden_file: str, mapping_dict: dict[str, str],
     """
     try:
         if shortcut_file_path:
-            original_file = shortcut_file_path.removesuffix(".lnk").strip()
+            original_file = shortcut_file_path.removesuffix(".lnk")
         else:
             original_file = mapping_dict.get(hidden_file)
 
